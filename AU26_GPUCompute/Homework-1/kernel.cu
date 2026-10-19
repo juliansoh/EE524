@@ -12,12 +12,26 @@
 #include <stdio.h>
 #include <cstdlib>
 #include <cmath>
+#include <new>
 
 cudaError_t addWithCuda(int *c, const int *a, const int *b, unsigned int size);
 cudaError_t saxpyWithCuda(float* x, float* y, float a, unsigned int N);
 cudaError_t Matrix2DWithCuda(float* A, float* B, float* C, int M, int N);
+cudaError_t Matrix3DWithCuda(float* A, float* B, float* C, int M, int N, int P);
 bool runSaxpyCase(unsigned int N, float saxpyA);
+bool runMatrix2DCase(int M, int N);
+bool runMatrix3DCase(int M, int N, int P);
 
+// Helper function to check for CUDA errors (as discussd in lecture slide 37
+inline bool exceedsTolerance(float deviceValue, float hostValue, float aTol, float rTol)
+{
+    float absErr = std::fabs(deviceValue - hostValue);
+    float relErrLimit = rTol * std::fmax(std::fabs(hostValue), std::fabs(deviceValue));
+    float tol = std::fmax(aTol, relErrLimit);
+    return absErr > tol;
+}
+
+// Cuda Kernel definitions
 __global__ void addKernel(int *c, const int *a, const int *b)
 {
     int i = threadIdx.x;
@@ -38,6 +52,16 @@ __global__ void Matrix2DWithCudaKernel(float* A, float* B, float* C, int M, int 
 	// Implement 2D matrix addition kernel here
     unsigned int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i < static_cast<unsigned int>(M * N))
+	{
+		C[i] = A[i] + B[i];
+	}
+}
+
+__global__ void Matrix3DWithCudaKernel(float* A, float* B, float* C, int M, int N, int P)
+{
+	// Implement 3D matrix addition kernel here
+	unsigned int i = blockIdx.x * blockDim.x + threadIdx.x;
+	if (i < static_cast<unsigned int>(M * N * P))
 	{
 		C[i] = A[i] + B[i];
 	}
@@ -81,56 +105,25 @@ int main()
     checkCuda(cudaStatus, "cudaDeviceReset");
 
     // 2D matrix addition kernel use cases
-	int M = 4;
-    int N = 4;
-	float* A = new float[M * N];
-    float* B = new float[M * N];
-    float* C = new float[M * N];
-	float* C_h = new float[M * N];  // Host result for verification because C will be overwritten by device result
-	std::srand(42);
-    for (int i = 0; i < M * N; i++) {
-        A[i] = static_cast<float>(std::rand()) / RAND_MAX;
-        B[i] = static_cast<float>(std::rand()) / RAND_MAX;
+    int matrixRows[] = { 4, 500, 3024 };
+    int matrixCols[] = { 4, 500, 4032 };
+    for (unsigned int i = 0; i < sizeof(matrixRows) / sizeof(matrixRows[0]); i++) {
+        runMatrix2DCase(matrixRows[i], matrixCols[i]);
     }
-	for (int i = 0; i < M * N; i++) {
-		C_h[i] = A[i] + B[i];  // Host computation for verification
-	}
-
-	cudaStatus = Matrix2DWithCuda(A, B, C, M, N);
-	checkCuda(cudaStatus, "Matrix2DWithCuda");
-
-    int matrixMismatchCount = 0;
-    const float matrixEpsilon = 1e-5f;
-    for (int i = 0; i < M * N; i++) {
-        if (std::fabs(C[i] - C_h[i]) > matrixEpsilon) {
-            matrixMismatchCount++;
-        }
-    }
-
-    if (matrixMismatchCount == 0) {
-        printf("Matrix2D check PASSED for %dx%d\n", M, N);
-    }
-    else {
-        printf("Matrix2D check FAILED for %dx%d: %d mismatches out of %d\n", M, N, matrixMismatchCount, M * N);
-        for (int i = 0; i < M * N; i++) {
-            if (std::fabs(C[i] - C_h[i]) > matrixEpsilon) {
-                int row = i / N;
-                int col = i % N;
-                printf("Mismatch at (%d,%d): C_host=%f, C_device=%f\n", row, col, C_h[i], C[i]);
-            }
-        }
-    }
-
-
-    delete[] A;
-    delete[] B;
-    delete[] C;
-    delete[] C_h;
 
     cudaStatus = cudaDeviceReset();
     checkCuda(cudaStatus, "cudaDeviceReset");
 
-	// 3D matrix addition kernel use cases
+    // 3D matrix addition kernel use cases
+    int matrixDepths[] = { 3, 100, 1000 };
+    int matrix3DRows[] = { 3, 100, 1000 };
+    int matrix3DCols[] = { 3, 100, 1000 };
+    for (unsigned int i = 0; i < sizeof(matrixDepths) / sizeof(matrixDepths[0]); i++) {
+        runMatrix3DCase(matrixDepths[i], matrix3DRows[i], matrix3DCols[i]);
+    }
+
+    cudaStatus = cudaDeviceReset();
+    checkCuda(cudaStatus, "cudaDeviceReset");
   
     return 0;
 }
@@ -147,7 +140,8 @@ bool runSaxpyCase(unsigned int N, float saxpyA)
     }
 
     for (unsigned int i = 0; i < N; i++) {
-        y_h[i] = saxpyA * x[i] + y[i];
+        double yRef = static_cast<double>(saxpyA) * static_cast<double>(x[i]) + static_cast<double>(y[i]);
+        y_h[i] = static_cast<float>(yRef);
     }
 
     cudaError_t cudaStatus = saxpyWithCuda(x, y, saxpyA, N);
@@ -160,24 +154,198 @@ bool runSaxpyCase(unsigned int N, float saxpyA)
     }
 
     int mismatchCount = 0;
-    const float epsilon = 1e-5f;
+    float maxAbsErr = 0.0f;
+    float maxRelErr = 0.0f;
+    const float aTol = 1e-6f;
+    const float rTol = 1e-5f;
     for (unsigned int i = 0; i < N; i++) {
-        if (std::fabs(y[i] - y_h[i]) > epsilon) {
+        float absErr = std::fabs(y[i] - y_h[i]);
+        float denom = std::fabs(y_h[i]);
+        float relErr = (denom > 0.0f) ? (absErr / denom) : absErr;
+        if (absErr > maxAbsErr) {
+            maxAbsErr = absErr;
+        }
+        if (relErr > maxRelErr) {
+            maxRelErr = relErr;
+        }
+
+        if (exceedsTolerance(y[i], y_h[i], aTol, rTol)) {
             mismatchCount++;
         }
     }
 
     if (mismatchCount == 0) {
-        printf("SAXPY check PASSED for N=%u\n", N);
+        printf("SAXPY check PASSED for N=%u (maxAbsErr=%e, maxRelErr=%e)\n", N, maxAbsErr, maxRelErr);
     }
     else {
-        printf("SAXPY check FAILED for N=%u: %d mismatches out of %u\n", N, mismatchCount, N);
+        printf("SAXPY check FAILED for N=%u: %d mismatches out of %u (maxAbsErr=%e, maxRelErr=%e)\n", N, mismatchCount, N, maxAbsErr, maxRelErr);
     }
 
     delete[] x;
     delete[] y;
     delete[] y_h;
     return mismatchCount == 0;
+}
+
+bool runMatrix2DCase(int M, int N)
+{
+    size_t totalElements = static_cast<size_t>(M) * static_cast<size_t>(N);
+    float* A = new float[totalElements];
+    float* B = new float[totalElements];
+    float* C = new float[totalElements];
+    float* C_h = new float[totalElements];
+
+    for (size_t i = 0; i < totalElements; i++) {
+        A[i] = static_cast<float>(std::rand()) / RAND_MAX;
+        B[i] = static_cast<float>(std::rand()) / RAND_MAX;
+    }
+
+    for (size_t i = 0; i < totalElements; i++) {
+        C_h[i] = A[i] + B[i];
+    }
+
+    cudaError_t cudaStatus = Matrix2DWithCuda(A, B, C, M, N);
+    checkCuda(cudaStatus, "Matrix2DWithCuda");
+    if (cudaStatus != cudaSuccess) {
+        delete[] A;
+        delete[] B;
+        delete[] C;
+        delete[] C_h;
+        return false;
+    }
+
+    int matrixMismatchCount = 0;
+    float maxAbsErr = 0.0f;
+    float maxRelErr = 0.0f;
+    const float aTol = 1e-6f;
+    const float rTol = 1e-5f;
+    for (size_t i = 0; i < totalElements; i++) {
+        float absErr = std::fabs(C[i] - C_h[i]);
+        float denom = std::fabs(C_h[i]);
+        float relErr = (denom > 0.0f) ? (absErr / denom) : absErr;
+        if (absErr > maxAbsErr) {
+            maxAbsErr = absErr;
+        }
+        if (relErr > maxRelErr) {
+            maxRelErr = relErr;
+        }
+
+        if (exceedsTolerance(C[i], C_h[i], aTol, rTol)) {
+            matrixMismatchCount++;
+        }
+    }
+
+    if (matrixMismatchCount == 0) {
+        printf("Matrix2D check PASSED for %dx%d (maxAbsErr=%e, maxRelErr=%e)\n", M, N, maxAbsErr, maxRelErr);
+    }
+    else {
+        printf("Matrix2D check FAILED for %dx%d: %d mismatches out of %zu (maxAbsErr=%e, maxRelErr=%e)\n", M, N, matrixMismatchCount, totalElements, maxAbsErr, maxRelErr);
+        int printedCount = 0;
+        for (size_t i = 0; i < totalElements; i++) {
+            if (exceedsTolerance(C[i], C_h[i], aTol, rTol)) {
+                int row = static_cast<int>(i / static_cast<size_t>(N));
+                int col = static_cast<int>(i % static_cast<size_t>(N));
+                printf("Mismatch at (%d,%d): C_host=%f, C_device=%f\n", row, col, C_h[i], C[i]);
+                printedCount++;
+                if (printedCount == 10) {
+                    printf("... additional mismatches omitted ...\n");
+                    break;
+                }
+            }
+        }
+    }
+
+    delete[] A;
+    delete[] B;
+    delete[] C;
+    delete[] C_h;
+    return matrixMismatchCount == 0;
+}
+
+bool runMatrix3DCase(int M, int N, int P)
+{
+    size_t totalElements = static_cast<size_t>(M) * static_cast<size_t>(N) * static_cast<size_t>(P);
+    float* A = new (std::nothrow) float[totalElements];
+    float* B = new (std::nothrow) float[totalElements];
+    float* C = new (std::nothrow) float[totalElements];
+    float* C_h = new (std::nothrow) float[totalElements];
+
+    if (A == nullptr || B == nullptr || C == nullptr || C_h == nullptr) {
+        printf("Matrix3D setup FAILED for %dx%dx%d: host allocation failed\n", M, N, P);
+        delete[] A;
+        delete[] B;
+        delete[] C;
+        delete[] C_h;
+        return false;
+    }
+
+    for (size_t i = 0; i < totalElements; i++) {
+        A[i] = static_cast<float>(std::rand()) / RAND_MAX;
+        B[i] = static_cast<float>(std::rand()) / RAND_MAX;
+    }
+
+    for (size_t i = 0; i < totalElements; i++) {
+        C_h[i] = A[i] + B[i];
+    }
+
+    cudaError_t cudaStatus = Matrix3DWithCuda(A, B, C, M, N, P);
+    checkCuda(cudaStatus, "Matrix3DWithCuda");
+    if (cudaStatus != cudaSuccess) {
+        delete[] A;
+        delete[] B;
+        delete[] C;
+        delete[] C_h;
+        return false;
+    }
+
+    int matrixMismatchCount = 0;
+    float maxAbsErr = 0.0f;
+    float maxRelErr = 0.0f;
+    const float aTol = 1e-6f;
+    const float rTol = 1e-5f;
+    for (size_t i = 0; i < totalElements; i++) {
+        float absErr = std::fabs(C[i] - C_h[i]);
+        float denom = std::fabs(C_h[i]);
+        float relErr = (denom > 0.0f) ? (absErr / denom) : absErr;
+        if (absErr > maxAbsErr) {
+            maxAbsErr = absErr;
+        }
+        if (relErr > maxRelErr) {
+            maxRelErr = relErr;
+        }
+
+        if (exceedsTolerance(C[i], C_h[i], aTol, rTol)) {
+            matrixMismatchCount++;
+        }
+    }
+
+    if (matrixMismatchCount == 0) {
+        printf("Matrix3D check PASSED for %dx%dx%d (maxAbsErr=%e, maxRelErr=%e)\n", M, N, P, maxAbsErr, maxRelErr);
+    }
+    else {
+        printf("Matrix3D check FAILED for %dx%dx%d: %d mismatches out of %zu (maxAbsErr=%e, maxRelErr=%e)\n", M, N, P, matrixMismatchCount, totalElements, maxAbsErr, maxRelErr);
+        int printedCount = 0;
+        for (size_t i = 0; i < totalElements; i++) {
+            if (exceedsTolerance(C[i], C_h[i], aTol, rTol)) {
+                int d = static_cast<int>(i / (static_cast<size_t>(N) * static_cast<size_t>(P)));
+                int rem = static_cast<int>(i % (static_cast<size_t>(N) * static_cast<size_t>(P)));
+                int r = rem / P;
+                int c = rem % P;
+                printf("Mismatch at (%d,%d,%d): C_host=%f, C_device=%f\n", d, r, c, C_h[i], C[i]);
+                printedCount++;
+                if (printedCount == 10) {
+                    printf("... additional mismatches omitted ...\n");
+                    break;
+                }
+            }
+        }
+    }
+
+    delete[] A;
+    delete[] B;
+    delete[] C;
+    delete[] C_h;
+    return matrixMismatchCount == 0;
 }
 
 
@@ -285,6 +453,36 @@ cudaError_t saxpyWithCuda(float* x, float* y, float a, unsigned int N)
 	// Part 4: Free device memory
     cudaFree(x_d);
     cudaFree(y_d);
+
+    return cudaSuccess;
+}
+
+cudaError_t Matrix3DWithCuda(float* A, float* B, float* C, int M, int N, int P)
+{
+    float* A_d = nullptr;
+    float* B_d = nullptr;
+    float* C_d = nullptr;
+    size_t totalElements = static_cast<size_t>(M) * static_cast<size_t>(N) * static_cast<size_t>(P);
+
+    // Part 1: Allocate device memory and copy from host memory to device memory
+    cudaMalloc((void**)&A_d, totalElements * sizeof(float));
+    cudaMalloc((void**)&B_d, totalElements * sizeof(float));
+    cudaMalloc((void**)&C_d, totalElements * sizeof(float));
+    cudaMemcpy(A_d, A, totalElements * sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(B_d, B, totalElements * sizeof(float), cudaMemcpyHostToDevice);
+
+    // Part 2: Call kernel - to launch a grid of threads to perform 3D operation
+    int threadsPerBlock = 256;
+    int blocksPerGrid = static_cast<int>((totalElements + static_cast<size_t>(threadsPerBlock) - 1) / static_cast<size_t>(threadsPerBlock));
+    Matrix3DWithCudaKernel<<<blocksPerGrid, threadsPerBlock>>>(A_d, B_d, C_d, M, N, P);
+
+    // Part 3: Copy from device memory to host memory
+    cudaMemcpy(C, C_d, totalElements * sizeof(float), cudaMemcpyDeviceToHost);
+
+    // Part 4: Free device memory
+    cudaFree(A_d);
+    cudaFree(B_d);
+    cudaFree(C_d);
 
     return cudaSuccess;
 }
