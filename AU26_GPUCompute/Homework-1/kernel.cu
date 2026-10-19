@@ -21,9 +21,6 @@ int main()
     const int b[arraySize] = { 10, 20, 30, 40, 50 };
     int c[arraySize] = { 0 };
 
-	//Variables for SAXPY
-
-
     // Add vectors in parallel.
     cudaError_t cudaStatus = addWithCuda(c, a, b, arraySize);
     //if (cudaStatus != cudaSuccess) {
@@ -132,34 +129,13 @@ Error:
 //Homework 1 - CUDA Kernels
 cudaError_t SAXPYWitCuda(float* x, float* y, float a, unsigned int N)
 {
-    float* dev_x = 0;
-    float* dev_y = 0;
-    cudaError_t cudaStatus;
-    // Choose which GPU to run on, change this on a multi-GPU system.
-    cudaStatus = cudaSetDevice(0);
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "cudaSetDevice failed!  Do you have a CUDA-capable GPU installed?");
-        goto Error;
-    }
-    // Allocate GPU buffers for two vectors (one input, one output)    .
-    cudaStatus = cudaMalloc((void**)&dev_x, N * sizeof(float));
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "cudaMalloc failed!");
-        goto Error;
-    }
-    cudaStatus = cudaMalloc((void**)&dev_y, N * sizeof(float));
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "cudaMalloc failed!");
-        goto Error;
-    }
 
+	// Part 1: Allocate device memory
 
-Error:
-	cudaFree(dev_x);
-	cudaFree(dev_y);    
-    //cudaFree(dev_a);
-    //cudaFree(dev_b);
+	// Part 2: Call kernel - to launch a grid of threads to perform SAXPY operation
 
-    return cudaStatus;
+	// Part 3: Copy from device memory to host memory
+
+	// Part 4: Free device memory
 
 }
