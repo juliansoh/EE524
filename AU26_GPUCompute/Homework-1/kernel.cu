@@ -4,13 +4,27 @@
 #include "Homework-1.h"
 
 #include <stdio.h>
+#include <cstdlib>
+#include <cmath>
 
 cudaError_t addWithCuda(int *c, const int *a, const int *b, unsigned int size);
+cudaError_t saxpyWithCuda(float* x, float* y, float a, unsigned int N);
+cudaError_t Matrix2DWithCuda(float* A, float* B, float* C, int M, int N);
+bool runSaxpyCase(unsigned int N, float saxpyA);
 
 __global__ void addKernel(int *c, const int *a, const int *b)
 {
     int i = threadIdx.x;
     c[i] = a[i] + b[i];
+}
+
+__global__ void saxpyKernel(float* x, float* y, float a, unsigned int N)
+{
+    unsigned int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < N)
+    {
+        y[i] = a * x[i] + y[i];
+    }
 }
 
 int main()
@@ -32,16 +46,81 @@ int main()
     printf("{1,2,3,4,5} + {10,20,30,40,50} = {%d,%d,%d,%d,%d}\n",
         c[0], c[1], c[2], c[3], c[4]);
 
+    //////////////////////////////
+	//Homework 1 - CUDA Kernels //
+    /////////////////////////////
+
+    //SAXPY Kernel Use Cases
+    float saxpyA = 2.0f;
+    unsigned int testSizes[] = { 10, 1000, 10000000 };
+    std::srand(42);
+
+    for (unsigned int i = 0; i < sizeof(testSizes) / sizeof(testSizes[0]); i++) {
+        runSaxpyCase(testSizes[i], saxpyA);
+    }
+
     // cudaDeviceReset must be called before exiting in order for profiling and
     // tracing tools such as Nsight and Visual Profiler to show complete traces.
     cudaStatus = cudaDeviceReset();
-	checkCuda(cudaStatus, "cudaDeviceReset");
-    //if (cudaStatus != cudaSuccess) {
-    //    fprintf(stderr, "cudaDeviceReset failed!");
-    //    return 1;
-    //}
+    checkCuda(cudaStatus, "cudaDeviceReset");
 
+    // 2D matrix addition kernel use cases
+	float* A, * B, * C;
+    int M = 4;
+    int N = 4;
+
+
+    cudaStatus = cudaDeviceReset();
+    checkCuda(cudaStatus, "cudaDeviceReset");
+
+	// 3D matrix addition kernel use cases
+  
     return 0;
+}
+
+bool runSaxpyCase(unsigned int N, float saxpyA)
+{
+    float* x = new float[N];
+    float* y = new float[N];
+    float* y_host = new float[N];
+
+    for (unsigned int i = 0; i < N; i++) {
+        x[i] = static_cast<float>(std::rand()) / RAND_MAX;
+        y[i] = static_cast<float>(std::rand()) / RAND_MAX;
+    }
+
+    for (unsigned int i = 0; i < N; i++) {
+        y_host[i] = saxpyA * x[i] + y[i];
+    }
+
+    cudaError_t cudaStatus = saxpyWithCuda(x, y, saxpyA, N);
+    checkCuda(cudaStatus, "saxpyWithCuda");
+    if (cudaStatus != cudaSuccess) {
+        delete[] x;
+        delete[] y;
+        delete[] y_host;
+        return false;
+    }
+
+    int mismatchCount = 0;
+    const float epsilon = 1e-5f;
+    for (unsigned int i = 0; i < N; i++) {
+        if (std::fabs(y[i] - y_host[i]) > epsilon) {
+            mismatchCount++;
+        }
+    }
+
+    if (mismatchCount == 0) {
+        printf("SAXPY check PASSED for N=%u\n", N);
+    }
+    else {
+        printf("SAXPY check FAILED for N=%u: %d mismatches out of %u\n", N, mismatchCount, N);
+    }
+
+    delete[] x;
+    delete[] y;
+    delete[] y_host;
+    return mismatchCount == 0;
 }
 
 
@@ -127,15 +206,34 @@ Error:
 
 
 //Homework 1 - CUDA Kernels
-cudaError_t SAXPYWitCuda(float* x, float* y, float a, unsigned int N)
+cudaError_t saxpyWithCuda(float* x, float* y, float a, unsigned int N)
 {
+    float* dev_x = nullptr;
+    float* dev_y = nullptr;
 
-	// Part 1: Allocate device memory
+	// Part 1: Allocate device memory and copy from host memory to device memory
+	cudaMalloc((void**)&dev_x, N * sizeof(float));
+	cudaMalloc((void**)&dev_y, N * sizeof(float));
+	cudaMemcpy(dev_x, x, N * sizeof(float), cudaMemcpyHostToDevice);
+	cudaMemcpy(dev_y, y, N * sizeof(float), cudaMemcpyHostToDevice);
 
 	// Part 2: Call kernel - to launch a grid of threads to perform SAXPY operation
+	int threadsPerBlock = 256;
+	int blocksPerGrid = (N + threadsPerBlock - 1) / threadsPerBlock;
+	saxpyKernel<<<blocksPerGrid, threadsPerBlock>>>(dev_x, dev_y, a, N);
 
 	// Part 3: Copy from device memory to host memory
+	cudaMemcpy(y, dev_y, N * sizeof(float), cudaMemcpyDeviceToHost);
 
 	// Part 4: Free device memory
+	cudaFree(dev_x);
+	cudaFree(dev_y);
 
+    return cudaSuccess;
+}
+
+cudaError_t Matrix2DWithCuda(float* A, float* B, float* C, int M, int N)
+{
+	// Implement 2D matrix addition kernel here
+	return cudaSuccess;
 }
