@@ -1,4 +1,10 @@
-﻿
+﻿/********************************
+* Author: Julian Soh
+* Date: Fall quarter 2026
+* EE P 524 - GPU Programming
+* Homework 1 - CUDA Kernels
+* *******************************/
+
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 #include "Homework-1.h"
@@ -25,6 +31,16 @@ __global__ void saxpyKernel(float* x, float* y, float a, unsigned int N)
     {
         y[i] = a * x[i] + y[i];
     }
+}
+
+__global__ void Matrix2DWithCudaKernel(float* A, float* B, float* C, int M, int N)
+{
+	// Implement 2D matrix addition kernel here
+    unsigned int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < static_cast<unsigned int>(M * N))
+	{
+		C[i] = A[i] + B[i];
+	}
 }
 
 int main()
@@ -65,10 +81,51 @@ int main()
     checkCuda(cudaStatus, "cudaDeviceReset");
 
     // 2D matrix addition kernel use cases
-	float* A, * B, * C;
-    int M = 4;
+	int M = 4;
     int N = 4;
+	float* A = new float[M * N];
+    float* B = new float[M * N];
+    float* C = new float[M * N];
+	float* C_h = new float[M * N];  // Host result for verification because C will be overwritten by device result
+	std::srand(42);
+    for (int i = 0; i < M * N; i++) {
+        A[i] = static_cast<float>(std::rand()) / RAND_MAX;
+        B[i] = static_cast<float>(std::rand()) / RAND_MAX;
+    }
+	for (int i = 0; i < M * N; i++) {
+		C_h[i] = A[i] + B[i];  // Host computation for verification
+	}
 
+	cudaStatus = Matrix2DWithCuda(A, B, C, M, N);
+	checkCuda(cudaStatus, "Matrix2DWithCuda");
+
+    int matrixMismatchCount = 0;
+    const float matrixEpsilon = 1e-5f;
+    for (int i = 0; i < M * N; i++) {
+        if (std::fabs(C[i] - C_h[i]) > matrixEpsilon) {
+            matrixMismatchCount++;
+        }
+    }
+
+    if (matrixMismatchCount == 0) {
+        printf("Matrix2D check PASSED for %dx%d\n", M, N);
+    }
+    else {
+        printf("Matrix2D check FAILED for %dx%d: %d mismatches out of %d\n", M, N, matrixMismatchCount, M * N);
+        for (int i = 0; i < M * N; i++) {
+            if (std::fabs(C[i] - C_h[i]) > matrixEpsilon) {
+                int row = i / N;
+                int col = i % N;
+                printf("Mismatch at (%d,%d): C_host=%f, C_device=%f\n", row, col, C_h[i], C[i]);
+            }
+        }
+    }
+
+
+    delete[] A;
+    delete[] B;
+    delete[] C;
+    delete[] C_h;
 
     cudaStatus = cudaDeviceReset();
     checkCuda(cudaStatus, "cudaDeviceReset");
@@ -82,7 +139,7 @@ bool runSaxpyCase(unsigned int N, float saxpyA)
 {
     float* x = new float[N];
     float* y = new float[N];
-    float* y_host = new float[N];
+    float* y_h = new float[N];
 
     for (unsigned int i = 0; i < N; i++) {
         x[i] = static_cast<float>(std::rand()) / RAND_MAX;
@@ -90,7 +147,7 @@ bool runSaxpyCase(unsigned int N, float saxpyA)
     }
 
     for (unsigned int i = 0; i < N; i++) {
-        y_host[i] = saxpyA * x[i] + y[i];
+        y_h[i] = saxpyA * x[i] + y[i];
     }
 
     cudaError_t cudaStatus = saxpyWithCuda(x, y, saxpyA, N);
@@ -98,14 +155,14 @@ bool runSaxpyCase(unsigned int N, float saxpyA)
     if (cudaStatus != cudaSuccess) {
         delete[] x;
         delete[] y;
-        delete[] y_host;
+        delete[] y_h;
         return false;
     }
 
     int mismatchCount = 0;
     const float epsilon = 1e-5f;
     for (unsigned int i = 0; i < N; i++) {
-        if (std::fabs(y[i] - y_host[i]) > epsilon) {
+        if (std::fabs(y[i] - y_h[i]) > epsilon) {
             mismatchCount++;
         }
     }
@@ -119,7 +176,7 @@ bool runSaxpyCase(unsigned int N, float saxpyA)
 
     delete[] x;
     delete[] y;
-    delete[] y_host;
+    delete[] y_h;
     return mismatchCount == 0;
 }
 
@@ -208,32 +265,56 @@ Error:
 //Homework 1 - CUDA Kernels
 cudaError_t saxpyWithCuda(float* x, float* y, float a, unsigned int N)
 {
-    float* dev_x = nullptr;
-    float* dev_y = nullptr;
+    float* x_d = nullptr;
+    float* y_d = nullptr;
 
 	// Part 1: Allocate device memory and copy from host memory to device memory
-	cudaMalloc((void**)&dev_x, N * sizeof(float));
-	cudaMalloc((void**)&dev_y, N * sizeof(float));
-	cudaMemcpy(dev_x, x, N * sizeof(float), cudaMemcpyHostToDevice);
-	cudaMemcpy(dev_y, y, N * sizeof(float), cudaMemcpyHostToDevice);
+    cudaMalloc((void**)&x_d, N * sizeof(float));
+    cudaMalloc((void**)&y_d, N * sizeof(float));
+    cudaMemcpy(x_d, x, N * sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(y_d, y, N * sizeof(float), cudaMemcpyHostToDevice);
 
 	// Part 2: Call kernel - to launch a grid of threads to perform SAXPY operation
 	int threadsPerBlock = 256;
 	int blocksPerGrid = (N + threadsPerBlock - 1) / threadsPerBlock;
-	saxpyKernel<<<blocksPerGrid, threadsPerBlock>>>(dev_x, dev_y, a, N);
+    saxpyKernel<<<blocksPerGrid, threadsPerBlock>>>(x_d, y_d, a, N);
 
 	// Part 3: Copy from device memory to host memory
-	cudaMemcpy(y, dev_y, N * sizeof(float), cudaMemcpyDeviceToHost);
+    cudaMemcpy(y, y_d, N * sizeof(float), cudaMemcpyDeviceToHost);
 
 	// Part 4: Free device memory
-	cudaFree(dev_x);
-	cudaFree(dev_y);
+    cudaFree(x_d);
+    cudaFree(y_d);
 
     return cudaSuccess;
 }
 
 cudaError_t Matrix2DWithCuda(float* A, float* B, float* C, int M, int N)
 {
-	// Implement 2D matrix addition kernel here
+	float* A_d = nullptr;
+	float* B_d = nullptr;
+	float* C_d = nullptr;
+
+    // Part 1: Allocate device memory and copy from host memory to device memory
+    cudaMalloc((void**)&A_d, M * N * sizeof(float));
+    cudaMalloc((void**)&B_d, M * N * sizeof(float));
+    cudaMalloc((void**)&C_d, M * N * sizeof(float));
+    cudaMemcpy(A_d, A, M * N * sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(B_d, B, M * N * sizeof(float), cudaMemcpyHostToDevice);
+
+    // Part 2: Call kernel - to launch a grid of threads to perform 2D operation
+    int threadsPerBlock = 256;
+    int totalElements = M * N;
+    int blocksPerGrid = (totalElements + threadsPerBlock - 1) / threadsPerBlock;
+	Matrix2DWithCudaKernel << <blocksPerGrid, threadsPerBlock >> > (A_d, B_d, C_d, M, N);
+
+    // Part 3: Copy from device memory to host memory
+    cudaMemcpy(C, C_d, M * N * sizeof(float), cudaMemcpyDeviceToHost);
+
+    // Part 4: Free device memory
+    cudaFree(A_d);
+    cudaFree(B_d);
+    cudaFree(C_d);
+
 	return cudaSuccess;
 }
