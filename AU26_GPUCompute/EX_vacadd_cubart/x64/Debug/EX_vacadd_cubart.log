@@ -1,5 +1,15 @@
-﻿  Compiling CUDA source file kernel.cu...
+﻿C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(551,5): warning MSB8028: The intermediate directory (x64\Debug\) contains files shared from another project (EX_vecadd_cubart.vcxproj).  This can lead to incorrect clean and rebuild behavior.
+  Compiling CUDA source file kernel.cu...
   
   E:\Dev\EE524\AU26_GPUCompute\EX_vacadd_cubart>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v13.4\bin\nvcc.exe" -gencode=arch=compute_75,code=\"sm_75,compute_75\" --use-local-env -ccbin "C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64" -x cu   -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v13.4\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v13.4\include"  -G   --keep-dir x64\Debug  -maxrregcount=0     --machine 64 --compile  -g  -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /FS /Zi /RTC1 /MDd " -Xcompiler "/Fdx64\Debug\vc145.pdb" -o E:\Dev\EE524\AU26_GPUCompute\EX_vacadd_cubart\x64\Debug\kernel.cu.obj "E:\Dev\EE524\AU26_GPUCompute\EX_vacadd_cubart\kernel.cu" 
+E:\Dev\EE524\AU26_GPUCompute\EX_vacadd_cubart\kernel.cu(22): error : a value of type "const int *" cannot be used to initialize an entity of type "int *"
+        for(int x=0, *pa = a, *pb = b;x<arraySize;x++, pa++, pb++) {
+                           ^
+  
+E:\Dev\EE524\AU26_GPUCompute\EX_vacadd_cubart\kernel.cu(22): error : a value of type "const int *" cannot be used to initialize an entity of type "int *"
+        for(int x=0, *pa = a, *pb = b;x<arraySize;x++, pa++, pb++) {
+                                    ^
+  
+  2 errors detected in the compilation of "E:/Dev/EE524/AU26_GPUCompute/EX_vacadd_cubart/kernel.cu".
   kernel.cu
-  EX_vacadd_cubart.vcxproj -> E:\Dev\EE524\AU26_GPUCompute\x64\Debug\EX_vacadd_cubart.exe
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\BuildCustomizations\CUDA 13.4.targets(807,9): error MSB3721: The command ""C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v13.4\bin\nvcc.exe" -gencode=arch=compute_75,code=\"sm_75,compute_75\" --use-local-env -ccbin "C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64" -x cu   -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v13.4\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v13.4\include"  -G   --keep-dir x64\Debug  -maxrregcount=0     --machine 64 --compile  -g  -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /FS /Zi /RTC1 /MDd " -Xcompiler "/Fdx64\Debug\vc145.pdb" -o E:\Dev\EE524\AU26_GPUCompute\EX_vacadd_cubart\x64\Debug\kernel.cu.obj "E:\Dev\EE524\AU26_GPUCompute\EX_vacadd_cubart\kernel.cu"" exited with code 2.

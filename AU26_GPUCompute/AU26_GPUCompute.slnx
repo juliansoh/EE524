@@ -2,5 +2,5 @@
   <Configurations>
     <Platform Name="x64" />
   </Configurations>
-  <Project Path="EX_vacadd_cubart/EX_vacadd_cubart.vcxproj" />
+  <Project Path="Homework-1/Homework-1.vcxproj" />
 </Solution>

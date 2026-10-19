@@ -13,6 +13,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{E2BC659D-59C3-25EC-8000-893BCDD4D01E}</ProjectGuid>
     <RootNamespace>EX_vacadd_cubart</RootNamespace>
+    <ProjectName>EX_vacadd_cubart</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
