@@ -49,22 +49,25 @@ __global__ void saxpyKernel(float* x, float* y, float a, unsigned int N)
 
 __global__ void Matrix2DWithCudaKernel(float* A, float* B, float* C, int M, int N)
 {
-	// Implement 2D matrix addition kernel here
-    unsigned int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i < static_cast<unsigned int>(M * N))
-	{
-		C[i] = A[i] + B[i];
-	}
+    unsigned int row = blockIdx.y * blockDim.y + threadIdx.y;
+    unsigned int col = blockIdx.x * blockDim.x + threadIdx.x;
+    if (row < static_cast<unsigned int>(M) && col < static_cast<unsigned int>(N))
+    {
+        unsigned int idx = row * static_cast<unsigned int>(N) + col;
+        C[idx] = A[idx] + B[idx];
+    }
 }
 
 __global__ void Matrix3DWithCudaKernel(float* A, float* B, float* C, int M, int N, int P)
 {
-	// Implement 3D matrix addition kernel here
-	unsigned int i = blockIdx.x * blockDim.x + threadIdx.x;
-	if (i < static_cast<unsigned int>(M * N * P))
-	{
-		C[i] = A[i] + B[i];
-	}
+    unsigned int dimM = blockIdx.z * blockDim.z + threadIdx.z;
+    unsigned int dimN = blockIdx.y * blockDim.y + threadIdx.y;
+    unsigned int dimP = blockIdx.x * blockDim.x + threadIdx.x;
+    if (dimM < static_cast<unsigned int>(M) && dimN < static_cast<unsigned int>(N) && dimP < static_cast<unsigned int>(P))
+    {
+        unsigned int idx = (dimM * static_cast<unsigned int>(N) + dimN) * static_cast<unsigned int>(P) + dimP;
+        C[idx] = A[idx] + B[idx];
+    }
 }
 
 int main()
@@ -135,8 +138,8 @@ bool runSaxpyCase(unsigned int N, float saxpyA)
     float* y_h = new float[N];
 
     for (unsigned int i = 0; i < N; i++) {
-        x[i] = static_cast<float>(std::rand()) / RAND_MAX;
-        y[i] = static_cast<float>(std::rand()) / RAND_MAX;
+        x[i] = 0.1f * static_cast<float>(i + 1);
+        y[i] = 0.3f * static_cast<float>(i + 1);
     }
 
     for (unsigned int i = 0; i < N; i++) {
@@ -160,7 +163,7 @@ bool runSaxpyCase(unsigned int N, float saxpyA)
     const float rTol = 1e-5f;
     for (unsigned int i = 0; i < N; i++) {
         float absErr = std::fabs(y[i] - y_h[i]);
-        float denom = std::fabs(y_h[i]);
+        float denom = std::fmax(std::fabs(y_h[i]), std::fabs(y[i]));
         float relErr = (denom > 0.0f) ? (absErr / denom) : absErr;
         if (absErr > maxAbsErr) {
             maxAbsErr = absErr;
@@ -196,8 +199,8 @@ bool runMatrix2DCase(int M, int N)
     float* C_h = new float[totalElements];
 
     for (size_t i = 0; i < totalElements; i++) {
-        A[i] = static_cast<float>(std::rand()) / RAND_MAX;
-        B[i] = static_cast<float>(std::rand()) / RAND_MAX;
+        A[i] = 0.1f * static_cast<float>(i + 1);
+        B[i] = 0.3f * static_cast<float>(i + 2);
     }
 
     for (size_t i = 0; i < totalElements; i++) {
@@ -221,7 +224,7 @@ bool runMatrix2DCase(int M, int N)
     const float rTol = 1e-5f;
     for (size_t i = 0; i < totalElements; i++) {
         float absErr = std::fabs(C[i] - C_h[i]);
-        float denom = std::fabs(C_h[i]);
+        float denom = std::fmax(std::fabs(C_h[i]), std::fabs(C[i]));
         float relErr = (denom > 0.0f) ? (absErr / denom) : absErr;
         if (absErr > maxAbsErr) {
             maxAbsErr = absErr;
@@ -239,7 +242,8 @@ bool runMatrix2DCase(int M, int N)
         printf("Matrix2D check PASSED for %dx%d (maxAbsErr=%e, maxRelErr=%e)\n", M, N, maxAbsErr, maxRelErr);
     }
     else {
-        printf("Matrix2D check FAILED for %dx%d: %d mismatches out of %zu (maxAbsErr=%e, maxRelErr=%e)\n", M, N, matrixMismatchCount, totalElements, maxAbsErr, maxRelErr);
+        printf("Matrix2D check FAILED for %dx%d: %d mismatches out of %zu (maxAbsErr=%e, maxRelErr=%e)\n", M,
+            N, matrixMismatchCount, totalElements, maxAbsErr, maxRelErr);
         int printedCount = 0;
         for (size_t i = 0; i < totalElements; i++) {
             if (exceedsTolerance(C[i], C_h[i], aTol, rTol)) {
@@ -280,8 +284,8 @@ bool runMatrix3DCase(int M, int N, int P)
     }
 
     for (size_t i = 0; i < totalElements; i++) {
-        A[i] = static_cast<float>(std::rand()) / RAND_MAX;
-        B[i] = static_cast<float>(std::rand()) / RAND_MAX;
+        A[i] = 0.1f * static_cast<float>(i + 1);
+        B[i] = 0.3f * static_cast<float>(i + 2);
     }
 
     for (size_t i = 0; i < totalElements; i++) {
@@ -305,7 +309,7 @@ bool runMatrix3DCase(int M, int N, int P)
     const float rTol = 1e-5f;
     for (size_t i = 0; i < totalElements; i++) {
         float absErr = std::fabs(C[i] - C_h[i]);
-        float denom = std::fabs(C_h[i]);
+        float denom = std::fmax(std::fabs(C_h[i]), std::fabs(C[i]));
         float relErr = (denom > 0.0f) ? (absErr / denom) : absErr;
         if (absErr > maxAbsErr) {
             maxAbsErr = absErr;
@@ -463,28 +467,80 @@ cudaError_t Matrix3DWithCuda(float* A, float* B, float* C, int M, int N, int P)
     float* B_d = nullptr;
     float* C_d = nullptr;
     size_t totalElements = static_cast<size_t>(M) * static_cast<size_t>(N) * static_cast<size_t>(P);
+    cudaError_t cudaStatus;
+    dim3 threadsPerBlock(8, 8, 8);
+    dim3 blocksPerGrid(1, 1, 1);
 
     // Part 1: Allocate device memory and copy from host memory to device memory
-    cudaMalloc((void**)&A_d, totalElements * sizeof(float));
-    cudaMalloc((void**)&B_d, totalElements * sizeof(float));
-    cudaMalloc((void**)&C_d, totalElements * sizeof(float));
-    cudaMemcpy(A_d, A, totalElements * sizeof(float), cudaMemcpyHostToDevice);
-    cudaMemcpy(B_d, B, totalElements * sizeof(float), cudaMemcpyHostToDevice);
+    cudaStatus = cudaSetDevice(0);
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "cudaSetDevice failed!");
+        goto Error;
+    }
+
+    cudaStatus = cudaMalloc((void**)&A_d, totalElements * sizeof(float));
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "cudaMalloc failed!");
+        goto Error;
+    }
+
+    cudaStatus = cudaMalloc((void**)&B_d, totalElements * sizeof(float));
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "cudaMalloc failed!");
+        goto Error;
+    }
+
+    cudaStatus = cudaMalloc((void**)&C_d, totalElements * sizeof(float));
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "cudaMalloc failed!");
+        goto Error;
+    }
+
+    cudaStatus = cudaMemcpy(A_d, A, totalElements * sizeof(float), cudaMemcpyHostToDevice);
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "cudaMemcpy failed!");
+        goto Error;
+    }
+
+    cudaStatus = cudaMemcpy(B_d, B, totalElements * sizeof(float), cudaMemcpyHostToDevice);
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "cudaMemcpy failed!");
+        goto Error;
+    }
 
     // Part 2: Call kernel - to launch a grid of threads to perform 3D operation
-    int threadsPerBlock = 256;
-    int blocksPerGrid = static_cast<int>((totalElements + static_cast<size_t>(threadsPerBlock) - 1) / static_cast<size_t>(threadsPerBlock));
+    blocksPerGrid = dim3(
+        (static_cast<unsigned int>(P) + threadsPerBlock.x - 1) / threadsPerBlock.x,
+        (static_cast<unsigned int>(N) + threadsPerBlock.y - 1) / threadsPerBlock.y,
+        (static_cast<unsigned int>(M) + threadsPerBlock.z - 1) / threadsPerBlock.z);
     Matrix3DWithCudaKernel<<<blocksPerGrid, threadsPerBlock>>>(A_d, B_d, C_d, M, N, P);
 
-    // Part 3: Copy from device memory to host memory
-    cudaMemcpy(C, C_d, totalElements * sizeof(float), cudaMemcpyDeviceToHost);
+    cudaStatus = cudaGetLastError();
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "Matrix3DWithCudaKernel launch failed: %s\n", cudaGetErrorString(cudaStatus));
+        goto Error;
+    }
 
+    cudaStatus = cudaDeviceSynchronize();
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "cudaDeviceSynchronize returned error code %d after launching Matrix3DWithCudaKernel!\n", cudaStatus);
+        goto Error;
+    }
+
+    // Part 3: Copy from device memory to host memory
+    cudaStatus = cudaMemcpy(C, C_d, totalElements * sizeof(float), cudaMemcpyDeviceToHost);
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "cudaMemcpy failed!");
+        goto Error;
+    }
+
+Error:
     // Part 4: Free device memory
     cudaFree(A_d);
     cudaFree(B_d);
     cudaFree(C_d);
 
-    return cudaSuccess;
+    return cudaStatus;
 }
 
 cudaError_t Matrix2DWithCuda(float* A, float* B, float* C, int M, int N)
@@ -492,27 +548,77 @@ cudaError_t Matrix2DWithCuda(float* A, float* B, float* C, int M, int N)
 	float* A_d = nullptr;
 	float* B_d = nullptr;
 	float* C_d = nullptr;
+    cudaError_t cudaStatus;
+    dim3 threadsPerBlock(16, 16);
+    dim3 blocksPerGrid(1, 1);
 
     // Part 1: Allocate device memory and copy from host memory to device memory
-    cudaMalloc((void**)&A_d, M * N * sizeof(float));
-    cudaMalloc((void**)&B_d, M * N * sizeof(float));
-    cudaMalloc((void**)&C_d, M * N * sizeof(float));
-    cudaMemcpy(A_d, A, M * N * sizeof(float), cudaMemcpyHostToDevice);
-    cudaMemcpy(B_d, B, M * N * sizeof(float), cudaMemcpyHostToDevice);
+    cudaStatus = cudaSetDevice(0);
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "cudaSetDevice failed!");
+        goto Error;
+    }
+
+    cudaStatus = cudaMalloc((void**)&A_d, M * N * sizeof(float));
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "cudaMalloc failed!");
+        goto Error;
+    }
+
+    cudaStatus = cudaMalloc((void**)&B_d, M * N * sizeof(float));
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "cudaMalloc failed!");
+        goto Error;
+    }
+
+    cudaStatus = cudaMalloc((void**)&C_d, M * N * sizeof(float));
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "cudaMalloc failed!");
+        goto Error;
+    }
+
+    cudaStatus = cudaMemcpy(A_d, A, M * N * sizeof(float), cudaMemcpyHostToDevice);
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "cudaMemcpy failed!");
+        goto Error;
+    }
+
+    cudaStatus = cudaMemcpy(B_d, B, M * N * sizeof(float), cudaMemcpyHostToDevice);
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "cudaMemcpy failed!");
+        goto Error;
+    }
 
     // Part 2: Call kernel - to launch a grid of threads to perform 2D operation
-    int threadsPerBlock = 256;
-    int totalElements = M * N;
-    int blocksPerGrid = (totalElements + threadsPerBlock - 1) / threadsPerBlock;
+    blocksPerGrid = dim3(
+        (static_cast<unsigned int>(N) + threadsPerBlock.x - 1) / threadsPerBlock.x,
+        (static_cast<unsigned int>(M) + threadsPerBlock.y - 1) / threadsPerBlock.y);
 	Matrix2DWithCudaKernel << <blocksPerGrid, threadsPerBlock >> > (A_d, B_d, C_d, M, N);
 
-    // Part 3: Copy from device memory to host memory
-    cudaMemcpy(C, C_d, M * N * sizeof(float), cudaMemcpyDeviceToHost);
+    cudaStatus = cudaGetLastError();
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "Matrix2DWithCudaKernel launch failed: %s\n", cudaGetErrorString(cudaStatus));
+        goto Error;
+    }
 
+    cudaStatus = cudaDeviceSynchronize();
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "cudaDeviceSynchronize returned error code %d after launching Matrix2DWithCudaKernel!\n", cudaStatus);
+        goto Error;
+    }
+
+    // Part 3: Copy from device memory to host memory
+    cudaStatus = cudaMemcpy(C, C_d, M * N * sizeof(float), cudaMemcpyDeviceToHost);
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "cudaMemcpy failed!");
+        goto Error;
+    }
+
+Error:
     // Part 4: Free device memory
     cudaFree(A_d);
     cudaFree(B_d);
     cudaFree(C_d);
 
-	return cudaSuccess;
+    return cudaStatus;
 }
