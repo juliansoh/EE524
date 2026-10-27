@@ -1,0 +1,65 @@
+param(
+	[Parameter(Mandatory=$true)][ValidateSet('global','shared')] [string]$KernelMode,
+	[Parameter(Mandatory=$true)][ValidateRange(1,4)] [int]$ImageIndex,
+	[Parameter(Mandatory=$true)] [string]$ResultsFile
+)
+
+$ErrorActionPreference = 'Continue'
+$src='E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu'
+$proj='E:\Dev\EE524\AU26_GPUCompute\Homework-2\Homework-2.vcxproj'
+$rel='E:\Dev\EE524\AU26_GPUCompute\Homework-2\x64\Release'
+$metrics='smsp__cycles_elapsed.sum,smsp__cycles_elapsed.sum.per_second,smsp__inst_executed.sum,dram__sectors_read.sum,dram__sectors_write.sum,dram__bytes.sum,sm__cycles_elapsed.avg,sm__cycles_elapsed.avg.per_second,sm__inst_executed.sum,dram__bytes_read.sum,dram__bytes_write.sum,gpu__cycles_elapsed.sum,gpu__time_duration.sum,gpu__time_duration.avg'
+
+function Num([string]$s){ [double](($s -replace ',','')) }
+function ByteScale([string]$u){ switch($u){ 'byte' {1}; 'Kbyte' {1024}; 'Mbyte' {1048576}; 'Gbyte' {1073741824}; default {1} } }
+function FreqScale([string]$u){ switch($u){ 'cycle/nsecond' {1e9}; 'Ghz' {1e9}; 'MHz' {1e6}; 'Mhz' {1e6}; default {1} } }
+
+$t=Get-Content -LiteralPath $src -Raw
+$globalLaunch='    blurKernelGlobal<<<gridSize, blockSize>>>(imgData_d, imgOut_d, x_cols, y_rows);'
+$sharedLaunch='    blurKernelSharedStatic<<<gridSize, blockSize>>>(imgData_d, imgOut_d, x_cols, y_rows, blurFilt_d);'
+if($KernelMode -eq 'global'){
+	$t=$t.Replace($sharedLaunch,$globalLaunch)
+	$t=$t.Replace('    checkCuda(cudaStatus, "blurKernelSharedStatic launch");','    checkCuda(cudaStatus, "blurKernelGlobal launch");')
+	$kname='blurKernelGlobal'
+	$suffix='kernel1'
+} else {
+	$t=$t.Replace($globalLaunch,$sharedLaunch)
+	$t=$t.Replace('    checkCuda(cudaStatus, "blurKernelGlobal launch");','    checkCuda(cudaStatus, "blurKernelSharedStatic launch");')
+	$kname='blurKernelSharedStatic'
+	$suffix='kernel2'
+}
+
+$t=[regex]::Replace($t,'const char filename\[\] = "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\hw2_testimage\d\.png";','const char filename[] = "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\hw2_testimage'+$ImageIndex+'.png";')
+$t=[regex]::Replace($t,'const char imgFileOut1\[\] = "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\hw2_testimage\d_out_kernel\d\.png";','const char imgFileOut1[] = "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\hw2_testimage'+$ImageIndex+'_out_'+$suffix+'.png";')
+Set-Content -LiteralPath $src -Value $t
+
+& "C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Current\Bin\MSBuild.exe" $proj /t:Build /p:Configuration=Release /p:Platform=x64 | Out-Null
+if ($LASTEXITCODE -ne 0) { throw "Build failed for kernel=$KernelMode image=$ImageIndex" }
+$exe = "hw2_rel_{0}_img{1}.exe" -f $KernelMode,$ImageIndex
+Copy-Item -LiteralPath (Join-Path $rel 'Homework-2.exe') -Destination (Join-Path $rel $exe) -Force
+
+Push-Location $rel
+$txt = & ncu -k $kname --metrics $metrics ('.\'+$exe) 2>&1 | Out-String
+Pop-Location
+
+Add-Content -LiteralPath $ResultsFile -Value "`r`n===== Case: kernel=$KernelMode, image=$ImageIndex, exe=$exe =====`r`n"
+Add-Content -LiteralPath $ResultsFile -Value $txt
+
+$m1=[regex]::Match($txt,'smsp__cycles_elapsed\.sum\s+\w+\s+([0-9,\.]+)')
+$m2=[regex]::Match($txt,'smsp__cycles_elapsed\.sum\.per_second\s+([A-Za-z/]+)\s+([0-9,\.]+)')
+$m3=[regex]::Match($txt,'smsp__inst_executed\.sum\s+\w+\s+([0-9,\.]+)')
+$m4=[regex]::Match($txt,'dram__bytes\.sum\s+([A-Za-z]+)\s+([0-9,\.]+)')
+if($m1.Success -and $m2.Success -and $m3.Success -and $m4.Success){
+	$cycles=Num $m1.Groups[1].Value
+	$perSec=(Num $m2.Groups[2].Value) * (FreqScale $m2.Groups[1].Value)
+	$inst=Num $m3.Groups[1].Value
+	$dramBytes=(Num $m4.Groups[2].Value) * (ByteScale $m4.Groups[1].Value)
+	$execSec= if($perSec -gt 0){$cycles/$perSec}else{0}
+	$intensity= if($dramBytes -gt 0){$inst/$dramBytes}else{0}
+	Add-Content -LiteralPath $ResultsFile -Value ("Computed kernel execution time (s): {0:E6}" -f $execSec)
+	Add-Content -LiteralPath $ResultsFile -Value ("Computed instruction intensity (inst/byte): {0:E6}`r`n" -f $intensity)
+} else {
+	Add-Content -LiteralPath $ResultsFile -Value "Computed metrics: parse failed`r`n"
+}
+
+Write-Output "Completed case kernel=$KernelMode image=$ImageIndex"

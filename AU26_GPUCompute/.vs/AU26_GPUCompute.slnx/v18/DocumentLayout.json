@@ -5,6 +5,14 @@
     {
       "AbsoluteMoniker": "D:0:0:{1D8CDEA3-FDCC-16B3-1376-3E94205A212F}|Homework-2\\Homework-2.vcxproj|E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\hw2_starter.cu||{8B382828-6202-11D1-8870-0000F87579D2}",
       "RelativeMoniker": "D:0:0:{1D8CDEA3-FDCC-16B3-1376-3E94205A212F}|Homework-2\\Homework-2.vcxproj|solutionrelative:Homework-2\\hw2_starter.cu||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{1D8CDEA3-FDCC-16B3-1376-3E94205A212F}|Homework-2\\Homework-2.vcxproj|E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\run_ncu_case.ps1||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{1D8CDEA3-FDCC-16B3-1376-3E94205A212F}|Homework-2\\Homework-2.vcxproj|solutionrelative:Homework-2\\run_ncu_case.ps1||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\NSight-Profiler-Results.txt||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Homework-2\\NSight-Profiler-Results.txt||{8B382828-6202-11D1-8870-0000F87579D2}"
     }
   ],
   "DocumentGroupContainers": [
@@ -14,8 +22,34 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": 2,
           "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "NSight-Profiler-Results.txt",
+              "DocumentMoniker": "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\NSight-Profiler-Results.txt",
+              "RelativeDocumentMoniker": "Homework-2\\NSight-Profiler-Results.txt",
+              "ToolTip": "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\NSight-Profiler-Results.txt",
+              "RelativeToolTip": "Homework-2\\NSight-Profiler-Results.txt",
+              "ViewState": "AgIAAKQBAAAAAAAAAABBwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003109|",
+              "WhenOpened": "2026-10-27T16:53:53.383Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "run_ncu_case.ps1",
+              "DocumentMoniker": "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\run_ncu_case.ps1",
+              "RelativeDocumentMoniker": "Homework-2\\run_ncu_case.ps1",
+              "ToolTip": "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\run_ncu_case.ps1",
+              "RelativeToolTip": "Homework-2\\run_ncu_case.ps1",
+              "ViewState": "AgIAAAYAAAAAAAAAAABBwEAAAABCAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-10-27T16:40:31.679Z",
+              "EditorCaption": ""
+            },
             {
               "$type": "Document",
               "DocumentIndex": 0,
@@ -24,7 +58,7 @@
               "RelativeDocumentMoniker": "Homework-2\\hw2_starter.cu",
               "ToolTip": "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\hw2_starter.cu",
               "RelativeToolTip": "Homework-2\\hw2_starter.cu",
-              "ViewState": "AgIAACIAAAAAJjMzMzP7vwYAAAAUAAAAAAAAAA==",
+              "ViewState": "AgIAAGgAAAAAAAAAAAAkwKYAAAAsAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
               "WhenOpened": "2026-10-26T15:18:13.025Z",
               "EditorCaption": ""

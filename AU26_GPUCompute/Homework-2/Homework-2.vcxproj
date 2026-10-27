@@ -23,6 +23,9 @@
     <ClInclude Include="blur_kernels.cuh" />
     <ClInclude Include="cuda-error-checking.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="run_ncu_case.ps1" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{1D8CDEA3-FDCC-16B3-1376-3E94205A212F}</ProjectGuid>
     <RootNamespace>Homework_2</RootNamespace>

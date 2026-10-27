@@ -1,0 +1,403 @@
+﻿NSight Compute Profiling Results
+Generated: 2026-10-27T09:42:12
+
+
+===== Case: kernel=global, image=1, exe=hw2_rel_global_img1.exe =====
+
+==PROF== Connected to process 6536 (E:\Dev\EE524\AU26_GPUCompute\Homework-2\x64\Release\hw2_rel_global_img1.exe)
+ncu.bat : CUDA Runtime Success: cudaMalloc imgData_d
+At E:\Dev\EE524\AU26_GPUCompute\Homework-2\run_ncu_case.ps1:42 char:8
++ $txt = & ncu -k $kname --metrics $metrics ('.\'+$exe) 2>&1 | Out-Stri ...
++        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (CUDA Runtime Su...alloc imgData_d:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+CUDA Runtime Success: cudaMalloc imgOut_d
+CUDA Runtime Success: cudaMalloc blurFilt_d
+CUDA Runtime Success: cudaMemcpy H2D imgData
+CUDA Runtime Success: cudaMemcpy H2D blurFilt
+==PROF== Profiling "blurKernelGlobal": 0%....50%....100% - 1 pass
+CUDA Runtime Success: blurKernelGlobal launch
+CUDA Runtime Success: cudaDeviceSynchronize kernel1
+CUDA Runtime Success: cudaMemcpy D2H imgOut kernel1
+==PROF== Disconnected from process 6536
+Timer #1 total host-side path: 2088.491 ms
+Timer #2 kernel #1 (launch+sync): 672.794 ms
+Timer #2 kernel #2 (launch+sync): disabled for step 16
+Timer #2 kernel #3 (launch+sync): disabled for step 16
+[6536] hw2_rel_global_img1.exe@127.0.0.1
+  blurKernelGlobal(const unsigned char *, unsigned char *, int, int) (252, 189, 1)x(16, 16, 1), Context 1, Stream 7, Device 0, CC 7.5
+    Section: Command line profiler metrics
+    ----------------------------------- ----------- ------------
+    Metric Name                         Metric Unit Metric Value
+    ----------------------------------- ----------- ------------
+    dram__bytes.sum                           Mbyte        22.84
+    dram__bytes_read.sum                      Mbyte        12.22
+    dram__bytes_write.sum                     Mbyte        10.62
+    dram__sectors_read.sum                   sector      381,723
+    dram__sectors_write.sum                  sector      331,903
+    gpu__cycles_elapsed.sum                   cycle    2,205,432
+    gpu__time_duration.avg                       ms         1.40
+    gpu__time_duration.sum                       ms         1.40
+    sm__cycles_elapsed.avg                    cycle 2,205,460.80
+    sm__cycles_elapsed.avg.per_second           Ghz         1.57
+    sm__inst_executed.sum                      inst  229,376,448
+    smsp__cycles_elapsed.sum                  cycle  352,873,728
+    smsp__cycles_elapsed.sum.per_second         Ghz       251.92
+    smsp__inst_executed.sum                    inst  229,376,448
+    ----------------------------------- ----------- ------------
+
+
+Computed kernel execution time (s): 1.400737E-003
+Computed instruction intensity (inst/byte): 9.577514E+000
+
+
+===== Case: kernel=global, image=2, exe=hw2_rel_global_img2.exe =====
+
+==PROF== Connected to process 7684 (E:\Dev\EE524\AU26_GPUCompute\Homework-2\x64\Release\hw2_rel_global_img2.exe)
+ncu.bat : CUDA Runtime Success: cudaMalloc imgData_d
+At E:\Dev\EE524\AU26_GPUCompute\Homework-2\run_ncu_case.ps1:42 char:8
++ $txt = & ncu -k $kname --metrics $metrics ('.\'+$exe) 2>&1 | Out-Stri ...
++        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (CUDA Runtime Su...alloc imgData_d:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+CUDA Runtime Success: cudaMalloc imgOut_d
+CUDA Runtime Success: cudaMalloc blurFilt_d
+CUDA Runtime Success: cudaMemcpy H2D imgData
+CUDA Runtime Success: cudaMemcpy H2D blurFilt
+==PROF== Profiling "blurKernelGlobal": 0%....50%....100% - 1 pass
+CUDA Runtime Success: blurKernelGlobal launch
+CUDA Runtime Success: cudaDeviceSynchronize kernel1
+CUDA Runtime Success: cudaMemcpy D2H imgOut kernel1
+==PROF== Disconnected from process 7684
+Timer #1 total host-side path: 2070.509 ms
+Timer #2 kernel #1 (launch+sync): 670.250 ms
+Timer #2 kernel #2 (launch+sync): disabled for step 16
+Timer #2 kernel #3 (launch+sync): disabled for step 16
+[7684] hw2_rel_global_img2.exe@127.0.0.1
+  blurKernelGlobal(const unsigned char *, unsigned char *, int, int) (252, 189, 1)x(16, 16, 1), Context 1, Stream 7, Device 0, CC 7.5
+    Section: Command line profiler metrics
+    ----------------------------------- ----------- ------------
+    Metric Name                         Metric Unit Metric Value
+    ----------------------------------- ----------- ------------
+    dram__bytes.sum                           Mbyte        22.81
+    dram__bytes_read.sum                      Mbyte        12.20
+    dram__bytes_write.sum                     Mbyte        10.62
+    dram__sectors_read.sum                   sector      381,169
+    dram__sectors_write.sum                  sector      331,776
+    gpu__cycles_elapsed.sum                   cycle    2,205,562
+    gpu__time_duration.avg                       ms         1.40
+    gpu__time_duration.sum                       ms         1.40
+    sm__cycles_elapsed.avg                    cycle 2,205,969.20
+    sm__cycles_elapsed.avg.per_second           Ghz         1.57
+    sm__inst_executed.sum                      inst  229,376,448
+    smsp__cycles_elapsed.sum                  cycle  352,955,072
+    smsp__cycles_elapsed.sum.per_second         Ghz       251.97
+    smsp__inst_executed.sum                    inst  229,376,448
+    ----------------------------------- ----------- ------------
+
+
+Computed kernel execution time (s): 1.400782E-003
+Computed instruction intensity (inst/byte): 9.590111E+000
+
+
+===== Case: kernel=global, image=3, exe=hw2_rel_global_img3.exe =====
+
+==PROF== Connected to process 3368 (E:\Dev\EE524\AU26_GPUCompute\Homework-2\x64\Release\hw2_rel_global_img3.exe)
+ncu.bat : CUDA Runtime Success: cudaMalloc imgData_d
+At E:\Dev\EE524\AU26_GPUCompute\Homework-2\run_ncu_case.ps1:42 char:8
++ $txt = & ncu -k $kname --metrics $metrics ('.\'+$exe) 2>&1 | Out-Stri ...
++        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (CUDA Runtime Su...alloc imgData_d:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+CUDA Runtime Success: cudaMalloc imgOut_d
+CUDA Runtime Success: cudaMalloc blurFilt_d
+CUDA Runtime Success: cudaMemcpy H2D imgData
+CUDA Runtime Success: cudaMemcpy H2D blurFilt
+==PROF== Profiling "blurKernelGlobal": 0%....50%....100% - 1 pass
+CUDA Runtime Success: blurKernelGlobal launch
+CUDA Runtime Success: cudaDeviceSynchronize kernel1
+CUDA Runtime Success: cudaMemcpy D2H imgOut kernel1
+==PROF== Disconnected from process 3368
+Timer #1 total host-side path: 2021.340 ms
+Timer #2 kernel #1 (launch+sync): 671.705 ms
+Timer #2 kernel #2 (launch+sync): disabled for step 16
+Timer #2 kernel #3 (launch+sync): disabled for step 16
+[3368] hw2_rel_global_img3.exe@127.0.0.1
+  blurKernelGlobal(const unsigned char *, unsigned char *, int, int) (252, 189, 1)x(16, 16, 1), Context 1, Stream 7, Device 0, CC 7.5
+    Section: Command line profiler metrics
+    ----------------------------------- ----------- ------------
+    Metric Name                         Metric Unit Metric Value
+    ----------------------------------- ----------- ------------
+    dram__bytes.sum                           Mbyte        22.81
+    dram__bytes_read.sum                      Mbyte        12.20
+    dram__bytes_write.sum                     Mbyte        10.62
+    dram__sectors_read.sum                   sector      381,165
+    dram__sectors_write.sum                  sector      331,776
+    gpu__cycles_elapsed.sum                   cycle    2,204,775
+    gpu__time_duration.avg                       ms         1.40
+    gpu__time_duration.sum                       ms         1.40
+    sm__cycles_elapsed.avg                    cycle 2,205,346.20
+    sm__cycles_elapsed.avg.per_second           Ghz         1.57
+    sm__inst_executed.sum                      inst  229,376,448
+    smsp__cycles_elapsed.sum                  cycle  352,855,392
+    smsp__cycles_elapsed.sum.per_second         Ghz       251.99
+    smsp__inst_executed.sum                    inst  229,376,448
+    ----------------------------------- ----------- ------------
+
+
+Computed kernel execution time (s): 1.400275E-003
+Computed instruction intensity (inst/byte): 9.590111E+000
+
+
+===== Case: kernel=global, image=4, exe=hw2_rel_global_img4.exe =====
+
+==PROF== Connected to process 15228 (E:\Dev\EE524\AU26_GPUCompute\Homework-2\x64\Release\hw2_rel_global_img4.exe)
+ncu.bat : CUDA Runtime Success: cudaMalloc imgData_d
+At E:\Dev\EE524\AU26_GPUCompute\Homework-2\run_ncu_case.ps1:42 char:8
++ $txt = & ncu -k $kname --metrics $metrics ('.\'+$exe) 2>&1 | Out-Stri ...
++        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (CUDA Runtime Su...alloc imgData_d:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+CUDA Runtime Success: cudaMalloc imgOut_d
+CUDA Runtime Success: cudaMalloc blurFilt_d
+CUDA Runtime Success: cudaMemcpy H2D imgData
+CUDA Runtime Success: cudaMemcpy H2D blurFilt
+==PROF== Profiling "blurKernelGlobal": 0%....50%....100% - 1 pass
+CUDA Runtime Success: blurKernelGlobal launch
+CUDA Runtime Success: cudaDeviceSynchronize kernel1
+CUDA Runtime Success: cudaMemcpy D2H imgOut kernel1
+==PROF== Disconnected from process 15228
+Timer #1 total host-side path: 2143.268 ms
+Timer #2 kernel #1 (launch+sync): 691.624 ms
+Timer #2 kernel #2 (launch+sync): disabled for step 16
+Timer #2 kernel #3 (launch+sync): disabled for step 16
+[15228] hw2_rel_global_img4.exe@127.0.0.1
+  blurKernelGlobal(const unsigned char *, unsigned char *, int, int) (252, 189, 1)x(16, 16, 1), Context 1, Stream 7, Device 0, CC 7.5
+    Section: Command line profiler metrics
+    ----------------------------------- ----------- ------------
+    Metric Name                         Metric Unit Metric Value
+    ----------------------------------- ----------- ------------
+    dram__bytes.sum                           Mbyte        22.81
+    dram__bytes_read.sum                      Mbyte        12.20
+    dram__bytes_write.sum                     Mbyte        10.62
+    dram__sectors_read.sum                   sector      381,165
+    dram__sectors_write.sum                  sector      331,784
+    gpu__cycles_elapsed.sum                   cycle    2,205,027
+    gpu__time_duration.avg                       ms         1.40
+    gpu__time_duration.sum                       ms         1.40
+    sm__cycles_elapsed.avg                    cycle    2,205,506
+    sm__cycles_elapsed.avg.per_second           Ghz         1.57
+    sm__inst_executed.sum                      inst  229,376,448
+    smsp__cycles_elapsed.sum                  cycle  352,880,960
+    smsp__cycles_elapsed.sum.per_second         Ghz       251.98
+    smsp__inst_executed.sum                    inst  229,376,448
+    ----------------------------------- ----------- ------------
+
+
+Computed kernel execution time (s): 1.400432E-003
+Computed instruction intensity (inst/byte): 9.590111E+000
+
+
+===== Case: kernel=shared, image=1, exe=hw2_rel_shared_img1.exe =====
+
+==PROF== Connected to process 11104 (E:\Dev\EE524\AU26_GPUCompute\Homework-2\x64\Release\hw2_rel_shared_img1.exe)
+ncu.bat : CUDA Runtime Success: cudaMalloc imgData_d
+At E:\Dev\EE524\AU26_GPUCompute\Homework-2\run_ncu_case.ps1:42 char:8
++ $txt = & ncu -k $kname --metrics $metrics ('.\'+$exe) 2>&1 | Out-Stri ...
++        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (CUDA Runtime Su...alloc imgData_d:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+CUDA Runtime Success: cudaMalloc imgOut_d
+CUDA Runtime Success: cudaMalloc blurFilt_d
+CUDA Runtime Success: cudaMemcpy H2D imgData
+CUDA Runtime Success: cudaMemcpy H2D blurFilt
+==PROF== Profiling "blurKernelSharedStatic": 0%....50%....100% - 1 pass
+CUDA Runtime Success: blurKernelSharedStatic launch
+CUDA Runtime Success: cudaDeviceSynchronize kernel1
+CUDA Runtime Success: cudaMemcpy D2H imgOut kernel1
+==PROF== Disconnected from process 11104
+Timer #1 total host-side path: 2081.103 ms
+Timer #2 kernel #1 (launch+sync): 664.647 ms
+Timer #2 kernel #2 (launch+sync): disabled for step 16
+Timer #2 kernel #3 (launch+sync): disabled for step 16
+[11104] hw2_rel_shared_img1.exe@127.0.0.1
+  blurKernelSharedStatic(const unsigned char *, unsigned char *, int, int, const float *) (252, 189, 1)x(16, 16, 1), Context 1, Stream 7, Device 0, CC 7.5
+    Section: Command line profiler metrics
+    ----------------------------------- ----------- ------------
+    Metric Name                         Metric Unit Metric Value
+    ----------------------------------- ----------- ------------
+    dram__bytes.sum                           Mbyte        22.85
+    dram__bytes_read.sum                      Mbyte        12.20
+    dram__bytes_write.sum                     Mbyte        10.64
+    dram__sectors_read.sum                   sector      381,272
+    dram__sectors_write.sum                  sector      332,651
+    gpu__cycles_elapsed.sum                   cycle    3,761,090
+    gpu__time_duration.avg                       ms         2.39
+    gpu__time_duration.sum                       ms         2.39
+    sm__cycles_elapsed.avg                    cycle 3,759,106.80
+    sm__cycles_elapsed.avg.per_second           Ghz         1.57
+    sm__inst_executed.sum                      inst  451,513,440
+    smsp__cycles_elapsed.sum                  cycle  601,457,088
+    smsp__cycles_elapsed.sum.per_second         Ghz       251.81
+    smsp__inst_executed.sum                    inst  451,513,440
+    ----------------------------------- ----------- ------------
+
+
+Computed kernel execution time (s): 2.388535E-003
+Computed instruction intensity (inst/byte): 1.884450E+001
+
+
+===== Case: kernel=shared, image=2, exe=hw2_rel_shared_img2.exe =====
+
+==PROF== Connected to process 3364 (E:\Dev\EE524\AU26_GPUCompute\Homework-2\x64\Release\hw2_rel_shared_img2.exe)
+ncu.bat : CUDA Runtime Success: cudaMalloc imgData_d
+At E:\Dev\EE524\AU26_GPUCompute\Homework-2\run_ncu_case.ps1:42 char:8
++ $txt = & ncu -k $kname --metrics $metrics ('.\'+$exe) 2>&1 | Out-Stri ...
++        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (CUDA Runtime Su...alloc imgData_d:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+CUDA Runtime Success: cudaMalloc imgOut_d
+CUDA Runtime Success: cudaMalloc blurFilt_d
+CUDA Runtime Success: cudaMemcpy H2D imgData
+CUDA Runtime Success: cudaMemcpy H2D blurFilt
+==PROF== Profiling "blurKernelSharedStatic": 0%....50%....100% - 1 pass
+CUDA Runtime Success: blurKernelSharedStatic launch
+CUDA Runtime Success: cudaDeviceSynchronize kernel1
+CUDA Runtime Success: cudaMemcpy D2H imgOut kernel1
+==PROF== Disconnected from process 3364
+Timer #1 total host-side path: 2082.989 ms
+Timer #2 kernel #1 (launch+sync): 667.476 ms
+Timer #2 kernel #2 (launch+sync): disabled for step 16
+Timer #2 kernel #3 (launch+sync): disabled for step 16
+[3364] hw2_rel_shared_img2.exe@127.0.0.1
+  blurKernelSharedStatic(const unsigned char *, unsigned char *, int, int, const float *) (252, 189, 1)x(16, 16, 1), Context 1, Stream 7, Device 0, CC 7.5
+    Section: Command line profiler metrics
+    ----------------------------------- ----------- ------------
+    Metric Name                         Metric Unit Metric Value
+    ----------------------------------- ----------- ------------
+    dram__bytes.sum                           Mbyte        22.91
+    dram__bytes_read.sum                      Mbyte        12.26
+    dram__bytes_write.sum                     Mbyte        10.64
+    dram__sectors_read.sum                   sector      383,194
+    dram__sectors_write.sum                  sector      332,651
+    gpu__cycles_elapsed.sum                   cycle    3,760,448
+    gpu__time_duration.avg                       ms         2.39
+    gpu__time_duration.sum                       ms         2.39
+    sm__cycles_elapsed.avg                    cycle 3,759,392.20
+    sm__cycles_elapsed.avg.per_second           Ghz         1.57
+    sm__inst_executed.sum                      inst  451,513,440
+    smsp__cycles_elapsed.sum                  cycle  601,502,752
+    smsp__cycles_elapsed.sum.per_second         Ghz       251.88
+    smsp__inst_executed.sum                    inst  451,513,440
+    ----------------------------------- ----------- ------------
+
+
+Computed kernel execution time (s): 2.388053E-003
+Computed instruction intensity (inst/byte): 1.879514E+001
+
+
+===== Case: kernel=shared, image=3, exe=hw2_rel_shared_img3.exe =====
+
+==PROF== Connected to process 11328 (E:\Dev\EE524\AU26_GPUCompute\Homework-2\x64\Release\hw2_rel_shared_img3.exe)
+ncu.bat : CUDA Runtime Success: cudaMalloc imgData_d
+At E:\Dev\EE524\AU26_GPUCompute\Homework-2\run_ncu_case.ps1:42 char:8
++ $txt = & ncu -k $kname --metrics $metrics ('.\'+$exe) 2>&1 | Out-Stri ...
++        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (CUDA Runtime Su...alloc imgData_d:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+CUDA Runtime Success: cudaMalloc imgOut_d
+CUDA Runtime Success: cudaMalloc blurFilt_d
+CUDA Runtime Success: cudaMemcpy H2D imgData
+CUDA Runtime Success: cudaMemcpy H2D blurFilt
+==PROF== Profiling "blurKernelSharedStatic": 0%....50%....100% - 1 pass
+CUDA Runtime Success: blurKernelSharedStatic launch
+CUDA Runtime Success: cudaDeviceSynchronize kernel1
+CUDA Runtime Success: cudaMemcpy D2H imgOut kernel1
+==PROF== Disconnected from process 11328
+Timer #1 total host-side path: 2078.761 ms
+Timer #2 kernel #1 (launch+sync): 667.310 ms
+Timer #2 kernel #2 (launch+sync): disabled for step 16
+Timer #2 kernel #3 (launch+sync): disabled for step 16
+[11328] hw2_rel_shared_img3.exe@127.0.0.1
+  blurKernelSharedStatic(const unsigned char *, unsigned char *, int, int, const float *) (252, 189, 1)x(16, 16, 1), Context 1, Stream 7, Device 0, CC 7.5
+    Section: Command line profiler metrics
+    ----------------------------------- ----------- ------------
+    Metric Name                         Metric Unit Metric Value
+    ----------------------------------- ----------- ------------
+    dram__bytes.sum                           Mbyte        22.82
+    dram__bytes_read.sum                      Mbyte        12.20
+    dram__bytes_write.sum                     Mbyte        10.62
+    dram__sectors_read.sum                   sector      381,272
+    dram__sectors_write.sum                  sector      331,847
+    gpu__cycles_elapsed.sum                   cycle    3,760,050
+    gpu__time_duration.avg                       ms         2.39
+    gpu__time_duration.sum                       ms         2.39
+    sm__cycles_elapsed.avg                    cycle 3,759,465.40
+    sm__cycles_elapsed.avg.per_second           Ghz         1.57
+    sm__inst_executed.sum                      inst  451,513,440
+    smsp__cycles_elapsed.sum                  cycle  601,514,464
+    smsp__cycles_elapsed.sum.per_second         Ghz       251.90
+    smsp__inst_executed.sum                    inst  451,513,440
+    ----------------------------------- ----------- ------------
+
+
+Computed kernel execution time (s): 2.387910E-003
+Computed instruction intensity (inst/byte): 1.886927E+001
+
+
+===== Case: kernel=shared, image=4, exe=hw2_rel_shared_img4.exe =====
+
+==PROF== Connected to process 12984 (E:\Dev\EE524\AU26_GPUCompute\Homework-2\x64\Release\hw2_rel_shared_img4.exe)
+ncu.bat : CUDA Runtime Success: cudaMalloc imgData_d
+At E:\Dev\EE524\AU26_GPUCompute\Homework-2\run_ncu_case.ps1:42 char:8
++ $txt = & ncu -k $kname --metrics $metrics ('.\'+$exe) 2>&1 | Out-Stri ...
++        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (CUDA Runtime Su...alloc imgData_d:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+CUDA Runtime Success: cudaMalloc imgOut_d
+CUDA Runtime Success: cudaMalloc blurFilt_d
+CUDA Runtime Success: cudaMemcpy H2D imgData
+CUDA Runtime Success: cudaMemcpy H2D blurFilt
+==PROF== Profiling "blurKernelSharedStatic": 0%....50%....100% - 1 pass
+CUDA Runtime Success: blurKernelSharedStatic launch
+CUDA Runtime Success: cudaDeviceSynchronize kernel1
+CUDA Runtime Success: cudaMemcpy D2H imgOut kernel1
+==PROF== Disconnected from process 12984
+Timer #1 total host-side path: 2122.904 ms
+Timer #2 kernel #1 (launch+sync): 667.990 ms
+Timer #2 kernel #2 (launch+sync): disabled for step 16
+Timer #2 kernel #3 (launch+sync): disabled for step 16
+[12984] hw2_rel_shared_img4.exe@127.0.0.1
+  blurKernelSharedStatic(const unsigned char *, unsigned char *, int, int, const float *) (252, 189, 1)x(16, 16, 1), Context 1, Stream 7, Device 0, CC 7.5
+    Section: Command line profiler metrics
+    ----------------------------------- ----------- ------------
+    Metric Name                         Metric Unit Metric Value
+    ----------------------------------- ----------- ------------
+    dram__bytes.sum                           Mbyte        22.82
+    dram__bytes_read.sum                      Mbyte        12.20
+    dram__bytes_write.sum                     Mbyte        10.62
+    dram__sectors_read.sum                   sector      381,272
+    dram__sectors_write.sum                  sector      331,780
+    gpu__cycles_elapsed.sum                   cycle    3,761,604
+    gpu__time_duration.avg                       ms         2.39
+    gpu__time_duration.sum                       ms         2.39
+    sm__cycles_elapsed.avg                    cycle 3,759,110.20
+    sm__cycles_elapsed.avg.per_second           Ghz         1.57
+    sm__inst_executed.sum                      inst  451,513,440
+    smsp__cycles_elapsed.sum                  cycle  601,457,632
+    smsp__cycles_elapsed.sum.per_second         Ghz       251.78
+    smsp__inst_executed.sum                    inst  451,513,440
+    ----------------------------------- ----------- ------------
+
+
+Computed kernel execution time (s): 2.388822E-003
+Computed instruction intensity (inst/byte): 1.886927E+001
+
