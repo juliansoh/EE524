@@ -1,0 +1,25 @@
+#include "blur_kernels.cuh"
+
+__global__ void blurKernelGlobal(const unsigned char* in, unsigned char* out, int w, int h)
+{
+	int Col = blockIdx.x * blockDim.x + threadIdx.x;
+	int Row = blockIdx.y * blockDim.y + threadIdx.y;
+
+	if (Col < w && Row < h)
+	{
+		int pixVal = 0;
+		int pixels = 0;
+
+		for (int blurRow = -BLUR_FILTER_WIDTH / 2; blurRow <= BLUR_FILTER_WIDTH / 2; ++blurRow) {
+			for (int blurCol = -BLUR_FILTER_WIDTH / 2; blurCol <= BLUR_FILTER_WIDTH / 2; ++blurCol) {
+				int curRow = Row + blurRow;
+				int curCol = Col + blurCol;
+				if (curRow > -1 && curRow < h && curCol > -1 && curCol < w) {
+					pixVal += in[curRow * w + curCol];
+					pixels++;
+				}
+			}
+		}
+		out[Row * w + Col] = static_cast<unsigned char>(pixVal / pixels);
+	}
+}

@@ -3,12 +3,28 @@
   "WorkspaceRootPath": "E:\\Dev\\EE524\\AU26_GPUCompute\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{9A0885BA-BB32-2597-BE01-094DB79B1C44}|Homework-1\\Homework-1.vcxproj|E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-1\\kernel.cu||{8B382828-6202-11D1-8870-0000F87579D2}",
-      "RelativeMoniker": "D:0:0:{9A0885BA-BB32-2597-BE01-094DB79B1C44}|Homework-1\\Homework-1.vcxproj|solutionrelative:Homework-1\\kernel.cu||{8B382828-6202-11D1-8870-0000F87579D2}"
+      "AbsoluteMoniker": "D:0:0:{1D8CDEA3-FDCC-16B3-1376-3E94205A212F}|Homework-2\\Homework-2.vcxproj|E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\hw2_starter.cu||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{1D8CDEA3-FDCC-16B3-1376-3E94205A212F}|Homework-2\\Homework-2.vcxproj|solutionrelative:Homework-2\\hw2_starter.cu||{8B382828-6202-11D1-8870-0000F87579D2}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{9A0885BA-BB32-2597-BE01-094DB79B1C44}|Homework-1\\Homework-1.vcxproj|E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-1\\Homework-1.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{9A0885BA-BB32-2597-BE01-094DB79B1C44}|Homework-1\\Homework-1.vcxproj|solutionrelative:Homework-1\\Homework-1.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+      "AbsoluteMoniker": "D:0:0:{1D8CDEA3-FDCC-16B3-1376-3E94205A212F}|Homework-2\\Homework-2.vcxproj|E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\blur_kernel1.cu||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{1D8CDEA3-FDCC-16B3-1376-3E94205A212F}|Homework-2\\Homework-2.vcxproj|solutionrelative:Homework-2\\blur_kernel1.cu||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{1D8CDEA3-FDCC-16B3-1376-3E94205A212F}|Homework-2\\Homework-2.vcxproj|E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\blur_kernel3.cu||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{1D8CDEA3-FDCC-16B3-1376-3E94205A212F}|Homework-2\\Homework-2.vcxproj|solutionrelative:Homework-2\\blur_kernel3.cu||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{1D8CDEA3-FDCC-16B3-1376-3E94205A212F}|Homework-2\\Homework-2.vcxproj|E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\blur_kernel2.cu||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{1D8CDEA3-FDCC-16B3-1376-3E94205A212F}|Homework-2\\Homework-2.vcxproj|solutionrelative:Homework-2\\blur_kernel2.cu||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{1D8CDEA3-FDCC-16B3-1376-3E94205A212F}|Homework-2\\Homework-2.vcxproj|E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\blur_kernels.cuh||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{1D8CDEA3-FDCC-16B3-1376-3E94205A212F}|Homework-2\\Homework-2.vcxproj|solutionrelative:Homework-2\\blur_kernels.cuh||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{1D8CDEA3-FDCC-16B3-1376-3E94205A212F}|Homework-2\\Homework-2.vcxproj|E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\cuda-error-checking.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{1D8CDEA3-FDCC-16B3-1376-3E94205A212F}|Homework-2\\Homework-2.vcxproj|solutionrelative:Homework-2\\cuda-error-checking.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     }
   ],
   "DocumentGroupContainers": [
@@ -18,32 +34,83 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 1,
+          "SelectedChildIndex": 5,
           "Children": [
             {
               "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "blur_kernel3.cu",
+              "DocumentMoniker": "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\blur_kernel3.cu",
+              "RelativeDocumentMoniker": "Homework-2\\blur_kernel3.cu",
+              "ToolTip": "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\blur_kernel3.cu",
+              "RelativeToolTip": "Homework-2\\blur_kernel3.cu",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACIAAAAEAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-10-27T03:01:30.065Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "blur_kernel2.cu",
+              "DocumentMoniker": "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\blur_kernel2.cu",
+              "RelativeDocumentMoniker": "Homework-2\\blur_kernel2.cu",
+              "ToolTip": "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\blur_kernel2.cu",
+              "RelativeToolTip": "Homework-2\\blur_kernel2.cu",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACsAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-10-27T03:01:30.214Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
               "DocumentIndex": 1,
-              "Title": "Homework-1.h",
-              "DocumentMoniker": "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-1\\Homework-1.h",
-              "RelativeDocumentMoniker": "Homework-1\\Homework-1.h",
-              "ToolTip": "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-1\\Homework-1.h",
-              "RelativeToolTip": "Homework-1\\Homework-1.h",
-              "ViewState": "AgIAAAAAAABAMzMzMzMbwAoAAAA0AAAAAAAAAA==",
+              "Title": "blur_kernel1.cu",
+              "DocumentMoniker": "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\blur_kernel1.cu",
+              "RelativeDocumentMoniker": "Homework-2\\blur_kernel1.cu",
+              "ToolTip": "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\blur_kernel1.cu",
+              "RelativeToolTip": "Homework-2\\blur_kernel1.cu",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABkAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-10-27T03:01:30.215Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "blur_kernels.cuh",
+              "DocumentMoniker": "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\blur_kernels.cuh",
+              "RelativeDocumentMoniker": "Homework-2\\blur_kernels.cuh",
+              "ToolTip": "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\blur_kernels.cuh",
+              "RelativeToolTip": "Homework-2\\blur_kernels.cuh",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-10-27T03:01:30.216Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "cuda-error-checking.h",
+              "DocumentMoniker": "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\cuda-error-checking.h",
+              "RelativeDocumentMoniker": "Homework-2\\cuda-error-checking.h",
+              "ToolTip": "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\cuda-error-checking.h",
+              "RelativeToolTip": "Homework-2\\cuda-error-checking.h",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2026-10-18T16:35:19.044Z",
-              "IsPinned": true
+              "WhenOpened": "2026-10-27T02:12:00.244Z"
             },
             {
               "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "kernel.cu",
-              "DocumentMoniker": "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-1\\kernel.cu",
-              "RelativeDocumentMoniker": "Homework-1\\kernel.cu",
-              "ToolTip": "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-1\\kernel.cu",
-              "RelativeToolTip": "Homework-1\\kernel.cu",
-              "ViewState": "AgIAAJcAAAAAa2ZmZqYowBUAAAAjAAAAAAAAAA==",
+              "Title": "hw2_starter.cu",
+              "DocumentMoniker": "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\hw2_starter.cu",
+              "RelativeDocumentMoniker": "Homework-2\\hw2_starter.cu",
+              "ToolTip": "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\hw2_starter.cu",
+              "RelativeToolTip": "Homework-2\\hw2_starter.cu",
+              "ViewState": "AgIAAHcAAAAABgAAAMAtwBwAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
-              "WhenOpened": "2026-10-19T00:12:15.718Z",
+              "WhenOpened": "2026-10-26T15:18:13.025Z",
               "EditorCaption": ""
             }
           ]

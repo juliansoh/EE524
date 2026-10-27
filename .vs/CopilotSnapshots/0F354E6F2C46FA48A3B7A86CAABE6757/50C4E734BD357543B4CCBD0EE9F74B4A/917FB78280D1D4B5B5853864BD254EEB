@@ -1,0 +1,9 @@
+﻿#pragma once
+
+#include "cuda_runtime.h"
+
+#define BLUR_FILTER_WIDTH 9
+
+__global__ void blurKernelGlobal(const unsigned char* in, unsigned char* out, int w, int h);
+__global__ void blurKernelSharedStatic(const unsigned char* in, unsigned char* out, int w, int h, const float* blurFilt_d);
+__global__ void blurKernelSharedDynamic(const unsigned char* in, unsigned char* out, int w, int h, const float* blurFilt_d);
