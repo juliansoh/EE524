@@ -1,137 +1,147 @@
-﻿  Compiling CUDA source file blur_kernel1.cu...
-  Compiling CUDA source file blur_kernel3.cu...
+﻿  Compiling CUDA source file blur_kernel3.cu...
   Compiling CUDA source file blur_kernel2.cu...
+  Compiling CUDA source file blur_kernel1.cu...
+  
+  E:\Dev\EE524\AU26_GPUCompute\Homework-2>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v13.4\bin\nvcc.exe" -gencode=arch=compute_75,code=\"sm_75,compute_75\" --use-local-env -ccbin "C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64" -x cu   -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v13.4\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v13.4\include"  -G   --keep-dir x64\Debug  -maxrregcount=0     --machine 64 --compile  -g  -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /FS /Zi /RTC1 /MDd " -Xcompiler "/Fdx64\Debug\vc145.pdb" -o E:\Dev\EE524\AU26_GPUCompute\Homework-2\x64\Debug\blur_kernel2.cu.obj "E:\Dev\EE524\AU26_GPUCompute\Homework-2\blur_kernel2.cu" 
   
   E:\Dev\EE524\AU26_GPUCompute\Homework-2>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v13.4\bin\nvcc.exe" -gencode=arch=compute_75,code=\"sm_75,compute_75\" --use-local-env -ccbin "C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64" -x cu   -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v13.4\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v13.4\include"  -G   --keep-dir x64\Debug  -maxrregcount=0     --machine 64 --compile  -g  -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /FS /Zi /RTC1 /MDd " -Xcompiler "/Fdx64\Debug\vc145.pdb" -o E:\Dev\EE524\AU26_GPUCompute\Homework-2\x64\Debug\blur_kernel3.cu.obj "E:\Dev\EE524\AU26_GPUCompute\Homework-2\blur_kernel3.cu" 
   
   E:\Dev\EE524\AU26_GPUCompute\Homework-2>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v13.4\bin\nvcc.exe" -gencode=arch=compute_75,code=\"sm_75,compute_75\" --use-local-env -ccbin "C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64" -x cu   -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v13.4\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v13.4\include"  -G   --keep-dir x64\Debug  -maxrregcount=0     --machine 64 --compile  -g  -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /FS /Zi /RTC1 /MDd " -Xcompiler "/Fdx64\Debug\vc145.pdb" -o E:\Dev\EE524\AU26_GPUCompute\Homework-2\x64\Debug\blur_kernel1.cu.obj "E:\Dev\EE524\AU26_GPUCompute\Homework-2\blur_kernel1.cu" 
-  
-  E:\Dev\EE524\AU26_GPUCompute\Homework-2>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v13.4\bin\nvcc.exe" -gencode=arch=compute_75,code=\"sm_75,compute_75\" --use-local-env -ccbin "C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64" -x cu   -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v13.4\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v13.4\include"  -G   --keep-dir x64\Debug  -maxrregcount=0     --machine 64 --compile  -g  -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /FS /Zi /RTC1 /MDd " -Xcompiler "/Fdx64\Debug\vc145.pdb" -o E:\Dev\EE524\AU26_GPUCompute\Homework-2\x64\Debug\blur_kernel2.cu.obj "E:\Dev\EE524\AU26_GPUCompute\Homework-2\blur_kernel2.cu" 
   Compiling CUDA source file hw2_starter.cu...
   
   E:\Dev\EE524\AU26_GPUCompute\Homework-2>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v13.4\bin\nvcc.exe" -gencode=arch=compute_75,code=\"sm_75,compute_75\" --use-local-env -ccbin "C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64" -x cu   -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v13.4\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v13.4\include"  -G   --keep-dir x64\Debug  -maxrregcount=0     --machine 64 --compile  -g  -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /FS /Zi /RTC1 /MDd " -Xcompiler "/Fdx64\Debug\vc145.pdb" -o E:\Dev\EE524\AU26_GPUCompute\Homework-2\x64\Debug\hw2_starter.cu.obj "E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu" 
+  blur_kernel2.cu
   blur_kernel1.cu
   blur_kernel3.cu
-  blur_kernel2.cu
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(51): warning #546-D: transfer of control bypasses initialization of:
-              variable "blockSize" (declared at line 92)
-              variable "gridSize" (declared at line 93)
-              variable "imgFileOut1" (declared at line 118)
-              variable "imgFileOut2" (declared at line 153)
-              variable "blurFiltBytes" (declared at line 157)
-              variable "imgFileOut3" (declared at line 182)
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(66): warning #546-D: transfer of control bypasses initialization of:
+              variable "blockSize" (declared at line 114)
+              variable "gridSize" (declared at line 115)
+              variable "imgFileOut1" (declared at line 147)
+              variable "imgFileOut2" (declared at line 189)
+              variable "blurFiltBytes" (declared at line 196)
+              variable "imgFileOut3" (declared at line 228)
             goto Error;
             ^
   
   Remark: The warnings can be suppressed with "-diag-suppress <warning-number>"
   
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(62): warning #546-D: transfer of control bypasses initialization of:
-              variable "blockSize" (declared at line 92)
-              variable "gridSize" (declared at line 93)
-              variable "imgFileOut1" (declared at line 118)
-              variable "imgFileOut2" (declared at line 153)
-              variable "blurFiltBytes" (declared at line 157)
-              variable "imgFileOut3" (declared at line 182)
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(71): warning #546-D: transfer of control bypasses initialization of:
+              variable "blockSize" (declared at line 114)
+              variable "gridSize" (declared at line 115)
+              variable "imgFileOut1" (declared at line 147)
+              variable "imgFileOut2" (declared at line 189)
+              variable "blurFiltBytes" (declared at line 196)
+              variable "imgFileOut3" (declared at line 228)
             goto Error;
             ^
   
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(68): warning #546-D: transfer of control bypasses initialization of:
-              variable "blockSize" (declared at line 92)
-              variable "gridSize" (declared at line 93)
-              variable "imgFileOut1" (declared at line 118)
-              variable "imgFileOut2" (declared at line 153)
-              variable "blurFiltBytes" (declared at line 157)
-              variable "imgFileOut3" (declared at line 182)
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(83): warning #546-D: transfer of control bypasses initialization of:
+              variable "blockSize" (declared at line 114)
+              variable "gridSize" (declared at line 115)
+              variable "imgFileOut1" (declared at line 147)
+              variable "imgFileOut2" (declared at line 189)
+              variable "blurFiltBytes" (declared at line 196)
+              variable "imgFileOut3" (declared at line 228)
             goto Error;
             ^
   
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(74): warning #546-D: transfer of control bypasses initialization of:
-              variable "blockSize" (declared at line 92)
-              variable "gridSize" (declared at line 93)
-              variable "imgFileOut1" (declared at line 118)
-              variable "imgFileOut2" (declared at line 153)
-              variable "blurFiltBytes" (declared at line 157)
-              variable "imgFileOut3" (declared at line 182)
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(89): warning #546-D: transfer of control bypasses initialization of:
+              variable "blockSize" (declared at line 114)
+              variable "gridSize" (declared at line 115)
+              variable "imgFileOut1" (declared at line 147)
+              variable "imgFileOut2" (declared at line 189)
+              variable "blurFiltBytes" (declared at line 196)
+              variable "imgFileOut3" (declared at line 228)
             goto Error;
             ^
   
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(81): warning #546-D: transfer of control bypasses initialization of:
-              variable "blockSize" (declared at line 92)
-              variable "gridSize" (declared at line 93)
-              variable "imgFileOut1" (declared at line 118)
-              variable "imgFileOut2" (declared at line 153)
-              variable "blurFiltBytes" (declared at line 157)
-              variable "imgFileOut3" (declared at line 182)
-            goto Error;
-            ^
-  
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(87): warning #546-D: transfer of control bypasses initialization of:
-              variable "blockSize" (declared at line 92)
-              variable "gridSize" (declared at line 93)
-              variable "imgFileOut1" (declared at line 118)
-              variable "imgFileOut2" (declared at line 153)
-              variable "blurFiltBytes" (declared at line 157)
-              variable "imgFileOut3" (declared at line 182)
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(95): warning #546-D: transfer of control bypasses initialization of:
+              variable "blockSize" (declared at line 114)
+              variable "gridSize" (declared at line 115)
+              variable "imgFileOut1" (declared at line 147)
+              variable "imgFileOut2" (declared at line 189)
+              variable "blurFiltBytes" (declared at line 196)
+              variable "imgFileOut3" (declared at line 228)
             goto Error;
             ^
   
 E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(102): warning #546-D: transfer of control bypasses initialization of:
-              variable "imgFileOut1" (declared at line 118)
-              variable "imgFileOut2" (declared at line 153)
-              variable "blurFiltBytes" (declared at line 157)
-              variable "imgFileOut3" (declared at line 182)
+              variable "blockSize" (declared at line 114)
+              variable "gridSize" (declared at line 115)
+              variable "imgFileOut1" (declared at line 147)
+              variable "imgFileOut2" (declared at line 189)
+              variable "blurFiltBytes" (declared at line 196)
+              variable "imgFileOut3" (declared at line 228)
             goto Error;
             ^
   
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(109): warning #546-D: transfer of control bypasses initialization of:
-              variable "imgFileOut1" (declared at line 118)
-              variable "imgFileOut2" (declared at line 153)
-              variable "blurFiltBytes" (declared at line 157)
-              variable "imgFileOut3" (declared at line 182)
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(108): warning #546-D: transfer of control bypasses initialization of:
+              variable "blockSize" (declared at line 114)
+              variable "gridSize" (declared at line 115)
+              variable "imgFileOut1" (declared at line 147)
+              variable "imgFileOut2" (declared at line 189)
+              variable "blurFiltBytes" (declared at line 196)
+              variable "imgFileOut3" (declared at line 228)
             goto Error;
             ^
   
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(116): warning #546-D: transfer of control bypasses initialization of:
-              variable "imgFileOut1" (declared at line 118)
-              variable "imgFileOut2" (declared at line 153)
-              variable "blurFiltBytes" (declared at line 157)
-              variable "imgFileOut3" (declared at line 182)
-            goto Error;
-            ^
-  
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(128): warning #546-D: transfer of control bypasses initialization of:
-              variable "imgFileOut2" (declared at line 153)
-              variable "blurFiltBytes" (declared at line 157)
-              variable "imgFileOut3" (declared at line 182)
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(124): warning #546-D: transfer of control bypasses initialization of:
+              variable "imgFileOut1" (declared at line 147)
+              variable "imgFileOut2" (declared at line 189)
+              variable "blurFiltBytes" (declared at line 196)
+              variable "imgFileOut3" (declared at line 228)
             goto Error;
             ^
   
 E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(135): warning #546-D: transfer of control bypasses initialization of:
-              variable "imgFileOut2" (declared at line 153)
-              variable "blurFiltBytes" (declared at line 157)
-              variable "imgFileOut3" (declared at line 182)
+              variable "imgFileOut1" (declared at line 147)
+              variable "imgFileOut2" (declared at line 189)
+              variable "blurFiltBytes" (declared at line 196)
+              variable "imgFileOut3" (declared at line 228)
             goto Error;
             ^
   
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(144): warning #546-D: transfer of control bypasses initialization of:
-              variable "imgFileOut2" (declared at line 153)
-              variable "blurFiltBytes" (declared at line 157)
-              variable "imgFileOut3" (declared at line 182)
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(142): warning #546-D: transfer of control bypasses initialization of:
+              variable "imgFileOut1" (declared at line 147)
+              variable "imgFileOut2" (declared at line 189)
+              variable "blurFiltBytes" (declared at line 196)
+              variable "imgFileOut3" (declared at line 228)
             goto Error;
             ^
   
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(164): warning #546-D: transfer of control bypasses initialization of:
-              variable "imgFileOut3" (declared at line 182)
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(160): warning #546-D: transfer of control bypasses initialization of:
+              variable "imgFileOut2" (declared at line 189)
+              variable "blurFiltBytes" (declared at line 196)
+              variable "imgFileOut3" (declared at line 228)
             goto Error;
             ^
   
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(171): warning #546-D: transfer of control bypasses initialization of:
-              variable "imgFileOut3" (declared at line 182)
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(167): warning #546-D: transfer of control bypasses initialization of:
+              variable "imgFileOut2" (declared at line 189)
+              variable "blurFiltBytes" (declared at line 196)
+              variable "imgFileOut3" (declared at line 228)
             goto Error;
             ^
   
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(178): warning #546-D: transfer of control bypasses initialization of:
-              variable "imgFileOut3" (declared at line 182)
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(179): warning #546-D: transfer of control bypasses initialization of:
+              variable "imgFileOut2" (declared at line 189)
+              variable "blurFiltBytes" (declared at line 196)
+              variable "imgFileOut3" (declared at line 228)
+            goto Error;
+            ^
+  
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(203): warning #546-D: transfer of control bypasses initialization of:
+              variable "imgFileOut3" (declared at line 228)
+            goto Error;
+            ^
+  
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(214): warning #546-D: transfer of control bypasses initialization of:
+              variable "imgFileOut3" (declared at line 228)
+            goto Error;
+            ^
+  
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(221): warning #546-D: transfer of control bypasses initialization of:
+              variable "imgFileOut3" (declared at line 228)
             goto Error;
             ^
   
@@ -145,211 +155,221 @@ E:\Dev\EE524\AU26_GPUCompute\Homework-2\util/stb_image.h(4832): warning #550-D: 
     				stbi__uint32 idata_limit_old = idata_limit;
     				             ^
   
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(51): warning #546-D: transfer of control bypasses initialization of:
-              variable "blockSize" (declared at line 92)
-              variable "gridSize" (declared at line 93)
-              variable "imgFileOut1" (declared at line 118)
-              variable "imgFileOut2" (declared at line 153)
-              variable "blurFiltBytes" (declared at line 157)
-              variable "imgFileOut3" (declared at line 182)
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(66): warning #546-D: transfer of control bypasses initialization of:
+              variable "blockSize" (declared at line 114)
+              variable "gridSize" (declared at line 115)
+              variable "imgFileOut1" (declared at line 147)
+              variable "imgFileOut2" (declared at line 189)
+              variable "blurFiltBytes" (declared at line 196)
+              variable "imgFileOut3" (declared at line 228)
             goto Error;
             ^
   
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(62): warning #546-D: transfer of control bypasses initialization of:
-              variable "blockSize" (declared at line 92)
-              variable "gridSize" (declared at line 93)
-              variable "imgFileOut1" (declared at line 118)
-              variable "imgFileOut2" (declared at line 153)
-              variable "blurFiltBytes" (declared at line 157)
-              variable "imgFileOut3" (declared at line 182)
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(71): warning #546-D: transfer of control bypasses initialization of:
+              variable "blockSize" (declared at line 114)
+              variable "gridSize" (declared at line 115)
+              variable "imgFileOut1" (declared at line 147)
+              variable "imgFileOut2" (declared at line 189)
+              variable "blurFiltBytes" (declared at line 196)
+              variable "imgFileOut3" (declared at line 228)
             goto Error;
             ^
   
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(68): warning #546-D: transfer of control bypasses initialization of:
-              variable "blockSize" (declared at line 92)
-              variable "gridSize" (declared at line 93)
-              variable "imgFileOut1" (declared at line 118)
-              variable "imgFileOut2" (declared at line 153)
-              variable "blurFiltBytes" (declared at line 157)
-              variable "imgFileOut3" (declared at line 182)
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(83): warning #546-D: transfer of control bypasses initialization of:
+              variable "blockSize" (declared at line 114)
+              variable "gridSize" (declared at line 115)
+              variable "imgFileOut1" (declared at line 147)
+              variable "imgFileOut2" (declared at line 189)
+              variable "blurFiltBytes" (declared at line 196)
+              variable "imgFileOut3" (declared at line 228)
             goto Error;
             ^
   
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(74): warning #546-D: transfer of control bypasses initialization of:
-              variable "blockSize" (declared at line 92)
-              variable "gridSize" (declared at line 93)
-              variable "imgFileOut1" (declared at line 118)
-              variable "imgFileOut2" (declared at line 153)
-              variable "blurFiltBytes" (declared at line 157)
-              variable "imgFileOut3" (declared at line 182)
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(89): warning #546-D: transfer of control bypasses initialization of:
+              variable "blockSize" (declared at line 114)
+              variable "gridSize" (declared at line 115)
+              variable "imgFileOut1" (declared at line 147)
+              variable "imgFileOut2" (declared at line 189)
+              variable "blurFiltBytes" (declared at line 196)
+              variable "imgFileOut3" (declared at line 228)
             goto Error;
             ^
   
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(81): warning #546-D: transfer of control bypasses initialization of:
-              variable "blockSize" (declared at line 92)
-              variable "gridSize" (declared at line 93)
-              variable "imgFileOut1" (declared at line 118)
-              variable "imgFileOut2" (declared at line 153)
-              variable "blurFiltBytes" (declared at line 157)
-              variable "imgFileOut3" (declared at line 182)
-            goto Error;
-            ^
-  
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(87): warning #546-D: transfer of control bypasses initialization of:
-              variable "blockSize" (declared at line 92)
-              variable "gridSize" (declared at line 93)
-              variable "imgFileOut1" (declared at line 118)
-              variable "imgFileOut2" (declared at line 153)
-              variable "blurFiltBytes" (declared at line 157)
-              variable "imgFileOut3" (declared at line 182)
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(95): warning #546-D: transfer of control bypasses initialization of:
+              variable "blockSize" (declared at line 114)
+              variable "gridSize" (declared at line 115)
+              variable "imgFileOut1" (declared at line 147)
+              variable "imgFileOut2" (declared at line 189)
+              variable "blurFiltBytes" (declared at line 196)
+              variable "imgFileOut3" (declared at line 228)
             goto Error;
             ^
   
 E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(102): warning #546-D: transfer of control bypasses initialization of:
-              variable "imgFileOut1" (declared at line 118)
-              variable "imgFileOut2" (declared at line 153)
-              variable "blurFiltBytes" (declared at line 157)
-              variable "imgFileOut3" (declared at line 182)
+              variable "blockSize" (declared at line 114)
+              variable "gridSize" (declared at line 115)
+              variable "imgFileOut1" (declared at line 147)
+              variable "imgFileOut2" (declared at line 189)
+              variable "blurFiltBytes" (declared at line 196)
+              variable "imgFileOut3" (declared at line 228)
             goto Error;
             ^
   
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(109): warning #546-D: transfer of control bypasses initialization of:
-              variable "imgFileOut1" (declared at line 118)
-              variable "imgFileOut2" (declared at line 153)
-              variable "blurFiltBytes" (declared at line 157)
-              variable "imgFileOut3" (declared at line 182)
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(108): warning #546-D: transfer of control bypasses initialization of:
+              variable "blockSize" (declared at line 114)
+              variable "gridSize" (declared at line 115)
+              variable "imgFileOut1" (declared at line 147)
+              variable "imgFileOut2" (declared at line 189)
+              variable "blurFiltBytes" (declared at line 196)
+              variable "imgFileOut3" (declared at line 228)
             goto Error;
             ^
   
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(116): warning #546-D: transfer of control bypasses initialization of:
-              variable "imgFileOut1" (declared at line 118)
-              variable "imgFileOut2" (declared at line 153)
-              variable "blurFiltBytes" (declared at line 157)
-              variable "imgFileOut3" (declared at line 182)
-            goto Error;
-            ^
-  
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(128): warning #546-D: transfer of control bypasses initialization of:
-              variable "imgFileOut2" (declared at line 153)
-              variable "blurFiltBytes" (declared at line 157)
-              variable "imgFileOut3" (declared at line 182)
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(124): warning #546-D: transfer of control bypasses initialization of:
+              variable "imgFileOut1" (declared at line 147)
+              variable "imgFileOut2" (declared at line 189)
+              variable "blurFiltBytes" (declared at line 196)
+              variable "imgFileOut3" (declared at line 228)
             goto Error;
             ^
   
 E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(135): warning #546-D: transfer of control bypasses initialization of:
-              variable "imgFileOut2" (declared at line 153)
-              variable "blurFiltBytes" (declared at line 157)
-              variable "imgFileOut3" (declared at line 182)
+              variable "imgFileOut1" (declared at line 147)
+              variable "imgFileOut2" (declared at line 189)
+              variable "blurFiltBytes" (declared at line 196)
+              variable "imgFileOut3" (declared at line 228)
             goto Error;
             ^
   
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(144): warning #546-D: transfer of control bypasses initialization of:
-              variable "imgFileOut2" (declared at line 153)
-              variable "blurFiltBytes" (declared at line 157)
-              variable "imgFileOut3" (declared at line 182)
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(142): warning #546-D: transfer of control bypasses initialization of:
+              variable "imgFileOut1" (declared at line 147)
+              variable "imgFileOut2" (declared at line 189)
+              variable "blurFiltBytes" (declared at line 196)
+              variable "imgFileOut3" (declared at line 228)
             goto Error;
             ^
   
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(164): warning #546-D: transfer of control bypasses initialization of:
-              variable "imgFileOut3" (declared at line 182)
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(160): warning #546-D: transfer of control bypasses initialization of:
+              variable "imgFileOut2" (declared at line 189)
+              variable "blurFiltBytes" (declared at line 196)
+              variable "imgFileOut3" (declared at line 228)
             goto Error;
             ^
   
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(171): warning #546-D: transfer of control bypasses initialization of:
-              variable "imgFileOut3" (declared at line 182)
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(167): warning #546-D: transfer of control bypasses initialization of:
+              variable "imgFileOut2" (declared at line 189)
+              variable "blurFiltBytes" (declared at line 196)
+              variable "imgFileOut3" (declared at line 228)
             goto Error;
             ^
   
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(178): warning #546-D: transfer of control bypasses initialization of:
-              variable "imgFileOut3" (declared at line 182)
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(179): warning #546-D: transfer of control bypasses initialization of:
+              variable "imgFileOut2" (declared at line 189)
+              variable "blurFiltBytes" (declared at line 196)
+              variable "imgFileOut3" (declared at line 228)
+            goto Error;
+            ^
+  
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(203): warning #546-D: transfer of control bypasses initialization of:
+              variable "imgFileOut3" (declared at line 228)
+            goto Error;
+            ^
+  
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(214): warning #546-D: transfer of control bypasses initialization of:
+              variable "imgFileOut3" (declared at line 228)
+            goto Error;
+            ^
+  
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(221): warning #546-D: transfer of control bypasses initialization of:
+              variable "imgFileOut3" (declared at line 228)
             goto Error;
             ^
   
   hw2_starter.cu
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(21): warning C4305: 'initializing': truncation from 'double' to 'const float'
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(93): warning C4533: initialization of 'gridSize' is skipped by 'goto Error'
-  E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(193): note: see declaration of 'Error'
-  E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(51): note: jump to label 'Error' from here
-E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(92): warning C4533: initialization of 'blockSize' is skipped by 'goto Error'
-  E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(193): note: see declaration of 'Error'
-  E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(51): note: jump to label 'Error' from here
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(23): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(115): warning C4533: initialization of 'gridSize' is skipped by 'goto Error'
+  E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(249): note: see declaration of 'Error'
+  E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(66): note: jump to label 'Error' from here
+E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(114): warning C4533: initialization of 'blockSize' is skipped by 'goto Error'
+  E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(249): note: see declaration of 'Error'
+  E:\Dev\EE524\AU26_GPUCompute\Homework-2\hw2_starter.cu(66): note: jump to label 'Error' from here
   Homework-2.vcxproj -> E:\Dev\EE524\AU26_GPUCompute\x64\Debug\Homework-2.exe

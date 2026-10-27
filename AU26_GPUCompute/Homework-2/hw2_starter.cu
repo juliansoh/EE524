@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <Windows.h>
+#include <profileapi.h>
 #include "cuda-error-checking.h"
 #include "blur_kernels.cuh"
 
@@ -35,7 +37,10 @@ const float BLUR_FILT[81] = { 0.1084,0.1762,0.2494,0.3071,0.3292,0.3071,0.2494,0
 int main()
 {
      // read input image from file - be aware of image pixel bit-depth and resolution (horiz x vertical)
-    const char filename[] = "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\hw2_testimage1.png";
+    // const char filename[] = "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\hw2_testimage1.png";
+    // const char filename[] = "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\hw2_testimage2.png";
+    // const char filename[] = "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\hw2_testimage3.png";
+    const char filename[] = "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\hw2_testimage4.png";
     int x_cols = 0;
     int y_rows = 0;
     int n_pixdepth = 0;
@@ -46,15 +51,30 @@ int main()
     unsigned char* imgOut_d = nullptr;
     float* blurFilt_d = nullptr;
     cudaError_t cudaStatus = cudaSuccess;
+    LARGE_INTEGER perfFreq = {};
+    LARGE_INTEGER timer1Start = {};
+    LARGE_INTEGER timer1Stop = {};
+    LARGE_INTEGER timer2Start = {};
+    LARGE_INTEGER timer2Stop = {};
+    double timer1Ms = 0.0;
+    double kernel1Ms = 0.0;
+    double kernel2Ms = 0.0;
+    double kernel3Ms = 0.0;
 
     if (imgData == nullptr || h_imgOut == nullptr) {
         fprintf(stderr, "Failed to allocate/load image buffers.\n");
         goto Error;
     }
 
+    if (!QueryPerformanceFrequency(&perfFreq)) {
+        fprintf(stderr, "QueryPerformanceFrequency failed.\n");
+        goto Error;
+    }
+
     // setup additional host variables, allocate host memory as needed
 
     // START timer #1
+    QueryPerformanceCounter(&timer1Start);
 
     // allocate device memory
     cudaStatus = cudaMalloc((void**)&imgData_d, imgSize);
@@ -88,7 +108,8 @@ int main()
         goto Error;
     }
 
-    // START timer #2
+    // START timer #2 (kernel #1 launch + synchronize)
+    QueryPerformanceCounter(&timer2Start);
     // launch kernel --- use appropriate heuristics to determine #threads/block and #blocks/grid to ensure coverage of your 2D data range
     dim3 blockSize(16, 16);
     dim3 gridSize((x_cols + blockSize.x - 1) / blockSize.x, (y_rows + blockSize.y - 1) / blockSize.y);
@@ -103,6 +124,10 @@ int main()
         goto Error;
     }
 
+    // STOP timer #2 (kernel #1 launch + synchronize)
+    QueryPerformanceCounter(&timer2Stop);
+    kernel1Ms = (double)(timer2Stop.QuadPart - timer2Start.QuadPart) * 1000.0 / (double)perfFreq.QuadPart;
+
     // Wait for kernel #1 to finish
     cudaStatus = cudaDeviceSynchronize();
     checkCuda(cudaStatus, "cudaDeviceSynchronize kernel1");
@@ -116,8 +141,14 @@ int main()
     if (cudaStatus != cudaSuccess) {
         goto Error;
     }
-    const char imgFileOut1[] = "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\hw2_outimage1.png";
+    // const char imgFileOut1[] = "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\hw2_outimage1.png";
+    // const char imgFileOut1[] = "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\hw2_testimage2_out_kernel1.png";
+    // const char imgFileOut1[] = "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\hw2_testimage3_out_kernel1.png";
+    const char imgFileOut1[] = "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\hw2_testimage4_out_kernel1.png";
     stbi_write_png(imgFileOut1, x_cols, y_rows, 1, h_imgOut, x_cols * n_pixdepth);
+
+    // START timer #2 (kernel #2 launch + synchronize)
+    QueryPerformanceCounter(&timer2Start);
 
     // blur kernel #2 call (implemented in blur_kernel2.cu)
     blurKernelSharedStatic<<<gridSize, blockSize>>>(imgData_d, imgOut_d, x_cols, y_rows, blurFilt_d);
@@ -135,8 +166,11 @@ int main()
     if (cudaStatus != cudaSuccess) {
         goto Error;
     }
-    
-    // STOP timer #2
+
+    // STOP timer #2 (kernel #2 launch + synchronize)
+    QueryPerformanceCounter(&timer2Stop);
+    kernel2Ms = (double)(timer2Stop.QuadPart - timer2Start.QuadPart) * 1000.0 / (double)perfFreq.QuadPart;
+
     // 
     // retrieve kernel #2 result data from device back to host
     cudaStatus = cudaMemcpy(h_imgOut, imgOut_d, imgSize, cudaMemcpyDeviceToHost);
@@ -145,14 +179,18 @@ int main()
         goto Error;
     }
 
-    // STOP timer #1
-
     // cudaDeviceReset( ) must be called in order for profiling and
     // tracing tools such as Nsight and Visual Profiler to show complete traces.
 
        // save kernel #2 result output image data to file
-    const char imgFileOut2[] = "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\hw2_outimage2.png";
+    // const char imgFileOut2[] = "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\hw2_outimage2.png";
+    // const char imgFileOut2[] = "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\hw2_testimage2_out_kernel2.png";
+    // const char imgFileOut2[] = "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\hw2_testimage3_out_kernel2.png";
+    const char imgFileOut2[] = "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\hw2_testimage4_out_kernel2.png";
     stbi_write_png(imgFileOut2, x_cols, y_rows, 1, h_imgOut, x_cols * n_pixdepth);
+
+    // START timer #2 (kernel #3 launch + synchronize)
+    QueryPerformanceCounter(&timer2Start);
 
     // blur kernel #3 call (implemented in blur_kernel3.cu)
     size_t blurFiltBytes = BLUR_FILTER_WIDTH * BLUR_FILTER_WIDTH * sizeof(float);
@@ -164,6 +202,10 @@ int main()
     if (cudaStatus != cudaSuccess) {
         goto Error;
     }
+
+    // STOP timer #2 (kernel #3 launch + synchronize)
+    QueryPerformanceCounter(&timer2Stop);
+    kernel3Ms = (double)(timer2Stop.QuadPart - timer2Start.QuadPart) * 1000.0 / (double)perfFreq.QuadPart;
 
     // Wait for kernel #3 to finish
     cudaStatus = cudaDeviceSynchronize();
@@ -180,8 +222,21 @@ int main()
     }
 
     // save kernel #3 result output image data to file
-    const char imgFileOut3[] = "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\hw2_outimage3.png";
+    // const char imgFileOut3[] = "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\hw2_outimage3.png";
+    // const char imgFileOut3[] = "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\hw2_testimage2_out_kernel3.png";
+    // const char imgFileOut3[] = "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\hw2_testimage3_out_kernel3.png";
+    const char imgFileOut3[] = "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\hw2_testimage4_out_kernel3.png";
     stbi_write_png(imgFileOut3, x_cols, y_rows, 1, h_imgOut, x_cols * n_pixdepth);
+
+    // STOP timer #1
+    QueryPerformanceCounter(&timer1Stop);
+    timer1Ms = (double)(timer1Stop.QuadPart - timer1Start.QuadPart) * 1000.0 / (double)perfFreq.QuadPart;
+
+    // retrieve and save timer results (write to console or file)
+    printf("Timer #1 total host-side path: %.3f ms\n", timer1Ms);
+    printf("Timer #2 kernel #1 (launch+sync): %.3f ms\n", kernel1Ms);
+    printf("Timer #2 kernel #2 (launch+sync): %.3f ms\n", kernel2Ms);
+    printf("Timer #2 kernel #3 (launch+sync): %.3f ms\n", kernel3Ms);
 
 
     // EXTRA CREDIT:
