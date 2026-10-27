@@ -3,6 +3,10 @@
   "WorkspaceRootPath": "E:\\Dev\\EE524\\AU26_GPUCompute\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{1D8CDEA3-FDCC-16B3-1376-3E94205A212F}|Homework-2\\Homework-2.vcxproj|E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\blur_kernel1.cu||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{1D8CDEA3-FDCC-16B3-1376-3E94205A212F}|Homework-2\\Homework-2.vcxproj|solutionrelative:Homework-2\\blur_kernel1.cu||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{1D8CDEA3-FDCC-16B3-1376-3E94205A212F}|Homework-2\\Homework-2.vcxproj|E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\hw2_starter.cu||{8B382828-6202-11D1-8870-0000F87579D2}",
       "RelativeMoniker": "D:0:0:{1D8CDEA3-FDCC-16B3-1376-3E94205A212F}|Homework-2\\Homework-2.vcxproj|solutionrelative:Homework-2\\hw2_starter.cu||{8B382828-6202-11D1-8870-0000F87579D2}"
     }
@@ -19,12 +23,25 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
+              "Title": "blur_kernel1.cu",
+              "DocumentMoniker": "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\blur_kernel1.cu",
+              "RelativeDocumentMoniker": "Homework-2\\blur_kernel1.cu",
+              "ToolTip": "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\blur_kernel1.cu",
+              "RelativeToolTip": "Homework-2\\blur_kernel1.cu",
+              "ViewState": "AgIAAAUAAABA/////38ZwAoAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-10-27T15:43:32.355Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
               "Title": "hw2_starter.cu",
               "DocumentMoniker": "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\hw2_starter.cu",
               "RelativeDocumentMoniker": "Homework-2\\hw2_starter.cu",
               "ToolTip": "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-2\\hw2_starter.cu",
               "RelativeToolTip": "Homework-2\\hw2_starter.cu",
-              "ViewState": "AgIAACIAAAAAJjMzMzP7vwYAAAAUAAAAAAAAAA==",
+              "ViewState": "AgIAAD8AAAAAAAAAAIAewAYAAAAUAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
               "WhenOpened": "2026-10-26T15:18:13.025Z",
               "EditorCaption": ""

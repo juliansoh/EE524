@@ -115,7 +115,8 @@ int main()
     dim3 gridSize((x_cols + blockSize.x - 1) / blockSize.x, (y_rows + blockSize.y - 1) / blockSize.y);
 
     // blur kernel #1 call (implemented in blur_kernel1.cu)
-    blurKernelGlobal<<<gridSize, blockSize>>>(imgData_d, imgOut_d, x_cols, y_rows);
+    // blurKernelGlobal<<<gridSize, blockSize>>>(imgData_d, imgOut_d, x_cols, y_rows);
+    blurKernelGlobal<<<1, 1>>>(imgData_d, imgOut_d, x_cols, y_rows);
 
     // Check for any errors launching kernel #1
     cudaStatus = cudaGetLastError();

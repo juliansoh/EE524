@@ -5,6 +5,12 @@ __global__ void blurKernelGlobal(const unsigned char* in, unsigned char* out, in
 	int Col = blockIdx.x * blockDim.x + threadIdx.x;
 	int Row = blockIdx.y * blockDim.y + threadIdx.y;
 
+	if (blockIdx.x == 0 && blockIdx.y == 0 && threadIdx.x == 0 && threadIdx.y == 0)
+	{
+		int debugBreak = 0;
+		debugBreak++;
+	}
+
 	if (Col < w && Row < h)
 	{
 		int pixVal = 0;
