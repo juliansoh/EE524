@@ -1,0 +1,52 @@
+﻿/********************************
+* Author: Julian Soh
+* Date: Fall quarter 2026
+* EE P 524 - GPU Programming
+* Homework 3 - CUDA Kernels
+* *******************************/
+
+#include "device_launch_parameters.h"
+#include "cuda_runtime.h"
+#include <stdio.h>
+#include"Error-Checking.h"
+#include <cstdlib>
+#include <cmath>
+#include <new>
+
+// ==============================
+// Helper Functions
+// ==============================
+cudaError_t single_branch_run(const float* in, float* out, int n);
+
+// ==============================
+// Kernel Declarations
+// ==============================
+__global__ void single_branch_kernel(const float* in, float* out, int n)
+{
+	// Compute Vector Analysis with Single Branching
+	// Each thread computes one element of the output vector.
+
+    int i = threadIdx.x + blockDim.x * blockIdx.x;
+
+}
+__global__ void nested_branch_kernel(const float* in, float* out, int n);
+
+// ==============================
+// Host Entry Point
+// ==============================
+int main()
+{
+    // TODO: Add host-side setup code.
+    // - Allocate and initialize host data.
+    // - Allocate device buffers.
+    // - Copy host data to device.
+    // - Launch kernel(s).
+    // - Copy results back to host.
+    // - Free all resources.
+
+    // TODO: Optional CUDA cleanup before exit.
+    // cudaDeviceReset();
+
+    return 0;
+}
+
