@@ -28,8 +28,8 @@ int load_mmult_inputs(const char* sizeOption, int j, int k, int l,
     std::vector<float>& M_h, std::vector<float>& N_h);
 void serial_mmult(const float* M_h, const float* N_h, float* P_h, int j, int k, int l);
 int write_mmult_csv(const char* outputFileName, const float* P_h, int j, int l);
-cudaError_t naive_mmult(const float* M, const float* N, float* P, int j, int k, int l);
-cudaError_t tiled_mmult(const float* M, const float* N, float* P, int j, int k, int l);
+cudaError_t naive_mmult(const float* M, const float* N, float* P, int j, int k, int l, int tileWidth);
+cudaError_t tiled_mmult(const float* M, const float* N, float* P, int j, int k, int l, int tileWidth);
 
 // ==============================
 // Kernel Declarations
@@ -53,7 +53,7 @@ __global__ void naive_mmult_kernel(const float* M_d, const float* N_d, float* P_
 }
 
 // Launch with a square TILE_WIDTH-by-TILE_WIDTH thread block.
-template<int TILE_WIDTH = 16>
+template<int TILE_WIDTH>
 __global__ void tiled_mmult_kernel(const float* M_d, const float* N_d, float* P_d,
     int j, int k, int l)
 {
@@ -98,20 +98,33 @@ int main(int argc, char** argv)
         (strcmp(argv[1], "-naive") == 0 || strcmp(argv[1], "-tiled") == 0);
     const bool validSize = argc >= 3 &&
         (strcmp(argv[2], "-k100") == 0 || strcmp(argv[2], "-k1000") == 0 || strcmp(argv[2], "-k2500") == 0);
-    if (argc != 3 || !validAlgorithm || !validSize) {
-        printf("Usage: %s <algorithm> <matrix-size>\n", argc > 0 ? argv[0] : "Homework-3-MMULT.exe");
+    const bool tiled = argc >= 2 && strcmp(argv[1], "-tiled") == 0;
+    int tileWidth = 0;
+    if (argc >= 4) {
+        if (strcmp(argv[3], "-tile8") == 0) tileWidth = 8;
+        else if (strcmp(argv[3], "-tile12") == 0) tileWidth = 12;
+        else if (strcmp(argv[3], "-tile16") == 0) tileWidth = 16;
+        else if (strcmp(argv[3], "-tile32") == 0) tileWidth = 32;
+    }
+    const bool validArguments = tiled ? argc == 4 && tileWidth != 0 : argc == 3;
+    if (!validAlgorithm || !validSize || !validArguments) {
+        printf("Usage: %s -naive <matrix-size>\n", argc > 0 ? argv[0] : "Homework-3-MMULT.exe");
+        printf("       %s -tiled <matrix-size> <tile-size>\n", argc > 0 ? argv[0] : "Homework-3-MMULT.exe");
         printf("  The CPU serial reference always runs and writes P_out_serial.csv.\n");
         printf("  <algorithm>    Required GPU variant selection:\n");
         printf("    -naive       GPU naive global-memory implementation; writes P_out_naive.csv\n");
-        printf("    -tiled       GPU shared-memory tiled implementation; writes P_out_tiled.csv\n");
+        printf("    -tiled       GPU shared-memory tiled implementation; writes P_out_tiled_tile<size>.csv\n");
         printf("  <matrix-size>  Required inner dimension k and output shape:\n");
         printf("    -k100        M 100x100, N 100x100, P 100x100\n");
         printf("    -k1000       M 1000x1000, N 1000x1000, P 1000x1000\n");
         printf("    -k2500       M 2000x2500, N 2500x3000, P 2000x3000\n");
+        printf("  <tile-size>    Required only for -tiled; square block size and tile width:\n");
+        printf("    -tile8, -tile12, -tile16, or -tile32\n");
+        printf("  -naive uses a fixed 16x16 block and does not accept a tile argument.\n");
         printf("Examples:\n");
         printf("  %s -naive -k100\n", argc > 0 ? argv[0] : "Homework-3-MMULT.exe");
         printf("  %s -naive -k1000\n", argc > 0 ? argv[0] : "Homework-3-MMULT.exe");
-        printf("  %s -tiled -k2500\n", argc > 0 ? argv[0] : "Homework-3-MMULT.exe");
+        printf("  %s -tiled -k2500 -tile32\n", argc > 0 ? argv[0] : "Homework-3-MMULT.exe");
         return 1;
     }
 
@@ -148,15 +161,17 @@ int main(int argc, char** argv)
     }
 
     if (strcmp(argv[1], "-naive") == 0) {
-        if (naive_mmult(M_h.data(), N_h.data(), P_h.data(), j, k, l) != cudaSuccess) {
+        if (naive_mmult(M_h.data(), N_h.data(), P_h.data(), j, k, l, 16) != cudaSuccess) {
             return 1;
         }
         return write_mmult_csv("P_out_naive.csv", P_h.data(), j, l);
     }
-    if (tiled_mmult(M_h.data(), N_h.data(), P_h.data(), j, k, l) != cudaSuccess) {
+    if (tiled_mmult(M_h.data(), N_h.data(), P_h.data(), j, k, l, tileWidth) != cudaSuccess) {
         return 1;
     }
-    return write_mmult_csv("P_out_tiled.csv", P_h.data(), j, l);
+    char outputFileName[64];
+    snprintf(outputFileName, sizeof(outputFileName), "P_out_tiled_tile%d.csv", tileWidth);
+    return write_mmult_csv(outputFileName, P_h.data(), j, l);
 }
 
 int load_mmult_inputs(const char* sizeOption, int j, int k, int l,
@@ -256,9 +271,10 @@ int write_mmult_csv(const char* outputFileName, const float* P_h, int j, int l)
     return 0;
 }
 
-cudaError_t naive_mmult(const float* M, const float* N, float* P, int j, int k, int l)
+cudaError_t naive_mmult(const float* M, const float* N, float* P, int j, int k, int l, int tileWidth)
 {
-    if (M == nullptr || N == nullptr || P == nullptr || j <= 0 || k <= 0 || l <= 0) {
+    if (M == nullptr || N == nullptr || P == nullptr || j <= 0 || k <= 0 || l <= 0 ||
+        (tileWidth != 8 && tileWidth != 12 && tileWidth != 16 && tileWidth != 32)) {
         return checkCuda(cudaErrorInvalidValue, "naive_mmult inputs and dimensions");
     }
 
@@ -286,7 +302,7 @@ cudaError_t naive_mmult(const float* M, const float* N, float* P, int j, int k, 
 
     // Part 2: Call kernel - to launch a grid of threads to perform 2D operation
     if (status == cudaSuccess) {
-        const dim3 threadsPerBlock(16, 16);
+        const dim3 threadsPerBlock(tileWidth, tileWidth);
         const dim3 blocksPerGrid((l - 1) / threadsPerBlock.x + 1,
             (j - 1) / threadsPerBlock.y + 1);
         naive_mmult_kernel<<<blocksPerGrid, threadsPerBlock>>>(M_d, N_d, P_d, j, k, l);
@@ -317,9 +333,10 @@ cudaError_t naive_mmult(const float* M, const float* N, float* P, int j, int k, 
     return status;
 }
 
-cudaError_t tiled_mmult(const float* M, const float* N, float* P, int j, int k, int l)
+cudaError_t tiled_mmult(const float* M, const float* N, float* P, int j, int k, int l, int tileWidth)
 {
-    if (M == nullptr || N == nullptr || P == nullptr || j <= 0 || k <= 0 || l <= 0) {
+    if (M == nullptr || N == nullptr || P == nullptr || j <= 0 || k <= 0 || l <= 0 ||
+        (tileWidth != 8 && tileWidth != 12 && tileWidth != 16 && tileWidth != 32)) {
         return checkCuda(cudaErrorInvalidValue, "tiled_mmult inputs and dimensions");
     }
 
@@ -347,11 +364,23 @@ cudaError_t tiled_mmult(const float* M, const float* N, float* P, int j, int k, 
 
     // Part 2: Call kernel - to launch a grid of threads to perform 2D operation
     if (status == cudaSuccess) {
-        constexpr int TILE_WIDTH = 16;
-        const dim3 threadsPerBlock(TILE_WIDTH, TILE_WIDTH);
+        const dim3 threadsPerBlock(tileWidth, tileWidth);
         const dim3 blocksPerGrid((l - 1) / threadsPerBlock.x + 1,
             (j - 1) / threadsPerBlock.y + 1);
-        tiled_mmult_kernel<TILE_WIDTH><<<blocksPerGrid, threadsPerBlock>>>(M_d, N_d, P_d, j, k, l);
+        switch (tileWidth) {
+        case 8:
+            tiled_mmult_kernel<8><<<blocksPerGrid, threadsPerBlock>>>(M_d, N_d, P_d, j, k, l);
+            break;
+        case 12:
+            tiled_mmult_kernel<12><<<blocksPerGrid, threadsPerBlock>>>(M_d, N_d, P_d, j, k, l);
+            break;
+        case 16:
+            tiled_mmult_kernel<16><<<blocksPerGrid, threadsPerBlock>>>(M_d, N_d, P_d, j, k, l);
+            break;
+        case 32:
+            tiled_mmult_kernel<32><<<blocksPerGrid, threadsPerBlock>>>(M_d, N_d, P_d, j, k, l);
+            break;
+        }
         status = checkCuda(cudaGetLastError(), "tiled_mmult_kernel launch");
     }
     if (status == cudaSuccess) {

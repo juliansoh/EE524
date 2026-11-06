@@ -5,10 +5,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{501B9C4A-20FB-CB30-6EBE-B450FA2F6C27}|Homework-3-MMULT\\Homework-3-MMULT.vcxproj|E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-3-MMULT\\kernel.cu||{8B382828-6202-11D1-8870-0000F87579D2}",
       "RelativeMoniker": "D:0:0:{501B9C4A-20FB-CB30-6EBE-B450FA2F6C27}|Homework-3-MMULT\\Homework-3-MMULT.vcxproj|solutionrelative:Homework-3-MMULT\\kernel.cu||{8B382828-6202-11D1-8870-0000F87579D2}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{1A9E1EF2-2C58-1BF7-9280-180316F1E6A4}|Homework-3\\Homework-3.vcxproj|E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-3\\kernel.cu||{8B382828-6202-11D1-8870-0000F87579D2}",
-      "RelativeMoniker": "D:0:0:{1A9E1EF2-2C58-1BF7-9280-180316F1E6A4}|Homework-3\\Homework-3.vcxproj|solutionrelative:Homework-3\\kernel.cu||{8B382828-6202-11D1-8870-0000F87579D2}"
     }
   ],
   "DocumentGroupContainers": [
@@ -32,22 +28,9 @@
               "RelativeDocumentMoniker": "Homework-3-MMULT\\kernel.cu",
               "ToolTip": "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-3-MMULT\\kernel.cu",
               "RelativeToolTip": "Homework-3-MMULT\\kernel.cu",
-              "ViewState": "AgIAABEBAAAAAAAAAAAAAAIBAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAFsAAAAAAAAAAAAAAGIAAAAnAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
               "WhenOpened": "2026-11-06T10:15:10.012Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "kernel.cu",
-              "DocumentMoniker": "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-3\\kernel.cu",
-              "RelativeDocumentMoniker": "Homework-3\\kernel.cu",
-              "ToolTip": "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-3\\kernel.cu",
-              "RelativeToolTip": "Homework-3\\kernel.cu",
-              "ViewState": "AgIAAIkBAAAAICRE+aIEwJkBAAAEAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
-              "WhenOpened": "2026-11-06T11:22:13.269Z",
               "EditorCaption": ""
             }
           ]

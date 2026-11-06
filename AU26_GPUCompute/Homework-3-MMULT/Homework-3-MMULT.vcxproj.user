@@ -1,12 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <LocalDebuggerCommandArguments>-tiled -k1000</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>-tiled -k1000 -tile8</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerCommandArgumentsHistory>-serial -k100|-niave -k100|-niave -k2500|-naive -k2500|-tiled -k1000|</LocalDebuggerCommandArgumentsHistory>
+    <LocalDebuggerCommandArgumentsHistory>-niave -k100|-niave -k2500|-naive -k2500|-tiled -k1000|-tiled -k1000 -tile8|</LocalDebuggerCommandArgumentsHistory>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LocalDebuggerCommandArguments>-niave -k100</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>-tiled -k1000 -tile8</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerCommandArgumentsHistory>-serial -k100|</LocalDebuggerCommandArgumentsHistory>
   </PropertyGroup>

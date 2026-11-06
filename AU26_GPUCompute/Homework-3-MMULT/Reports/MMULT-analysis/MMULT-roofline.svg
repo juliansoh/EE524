@@ -1,0 +1,187 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="780" viewBox="0 0 1100 780" role="img" aria-labelledby="title desc">
+<title id="title">Combined MMULT FP32 Roofline, Tesla T4</title><desc id="desc">All 31 report results, including 15 FMA-disabled runs. Logarithmic arithmetic intensity and hardware performance axes. One common FMA-capable reference roof uses the original largest tile32 run. IDs correspond to the report tables.</desc>
+<rect width="1100" height="780" fill="white"/><g font-family="Arial,sans-serif" fill="#172033">
+<text x="90" y="32" font-size="24" font-weight="bold">MMULT: all recorded GPU results</text>
+<text x="90" y="57" font-size="15">Tesla T4 | FP32 FLOPs include padded work | DRAM traffic denominator</text>
+<line x1="90" y1="90" x2="90" y2="565" stroke="#e0e5ec"/><text x="90" y="590" text-anchor="middle" font-size="15">1</text>
+<line x1="192.35" y1="90" x2="192.35" y2="565" stroke="#e0e5ec"/><text x="192.35" y="590" text-anchor="middle" font-size="15">2</text>
+<line x1="327.65" y1="90" x2="327.65" y2="565" stroke="#e0e5ec"/><text x="327.65" y="590" text-anchor="middle" font-size="15">5</text>
+<line x1="430" y1="90" x2="430" y2="565" stroke="#e0e5ec"/><text x="430" y="590" text-anchor="middle" font-size="15">10</text>
+<line x1="532.35" y1="90" x2="532.35" y2="565" stroke="#e0e5ec"/><text x="532.35" y="590" text-anchor="middle" font-size="15">20</text>
+<line x1="667.65" y1="90" x2="667.65" y2="565" stroke="#e0e5ec"/><text x="667.65" y="590" text-anchor="middle" font-size="15">50</text>
+<line x1="770" y1="90" x2="770" y2="565" stroke="#e0e5ec"/><text x="770" y="590" text-anchor="middle" font-size="15">100</text>
+<line x1="90" y1="565" x2="770" y2="565" stroke="#e0e5ec"/><text x="77" y="570" text-anchor="end" font-size="15">100</text>
+<line x1="90" y1="493.505" x2="770" y2="493.505" stroke="#e0e5ec"/><text x="77" y="498.505" text-anchor="end" font-size="15">200</text>
+<line x1="90" y1="398.995" x2="770" y2="398.995" stroke="#e0e5ec"/><text x="77" y="403.995" text-anchor="end" font-size="15">500</text>
+<line x1="90" y1="327.5" x2="770" y2="327.5" stroke="#e0e5ec"/><text x="77" y="332.5" text-anchor="end" font-size="15">1000</text>
+<line x1="90" y1="256.005" x2="770" y2="256.005" stroke="#e0e5ec"/><text x="77" y="261.005" text-anchor="end" font-size="15">2000</text>
+<line x1="90" y1="161.495" x2="770" y2="161.495" stroke="#e0e5ec"/><text x="77" y="166.495" text-anchor="end" font-size="15">5000</text>
+<line x1="90" y1="90" x2="770" y2="90" stroke="#e0e5ec"/><text x="77" y="95" text-anchor="end" font-size="15">10000</text>
+<polyline points="90,447.216 565.023,115.398 770,115.398" fill="none" stroke="#172033" stroke-width="3"/>
+<line x1="565.023" y1="90" x2="565.023" y2="565" stroke="#64748b" stroke-dasharray="6 5"/>
+<text x="480" y="104" font-size="14">FP32 reference: 7817 GFLOP/s</text>
+<text x="130" y="255" font-size="14" transform="rotate(-32 130 255)">DRAM reference: 313.28 GB/s</text>
+<text x="573.023" y="548" font-size="13">ridge 24.953</text>
+<g><title>01 naive, k=100, FMA=enabled, AI=23.012, GFLOP/s=267.091</title>
+<circle cx="553.062" cy="463.668" r="6" fill="#444444" stroke="white" stroke-width="1.5"/>
+<text x="526.062" y="483.668" font-size="12" font-weight="bold">01/16</text>
+</g>
+<text x="805" y="96" font-size="12" fill="#444444">01 100x100 : naive</text>
+<g><title>02 tile8, k=100, FMA=enabled, AI=26.273, GFLOP/s=288.136</title>
+<circle cx="572.631" cy="455.846" r="6" fill="#c23d32" stroke="white" stroke-width="1.5"/>
+<text x="574.631" y="477.846" font-size="12" font-weight="bold">02</text>
+</g>
+<text x="805" y="114" font-size="12" fill="#c23d32">02 100x100 : tile8</text>
+<g><title>03 tile12, k=100, FMA=enabled, AI=29.868, GFLOP/s=340.832</title>
+<circle cx="591.57" cy="438.522" r="6" fill="#986200" stroke="white" stroke-width="1.5"/>
+<text x="577.57" y="424.522" font-size="12" font-weight="bold">03</text>
+</g>
+<text x="805" y="132" font-size="12" fill="#986200">03 100x100 : tile12</text>
+<g><title>04 tile16, k=100, FMA=enabled, AI=33.311, GFLOP/s=402.785</title>
+<circle cx="607.679" cy="421.295" r="6" fill="#007f70" stroke="white" stroke-width="1.5"/>
+<text x="601.679" y="406.295" font-size="12" font-weight="bold">04</text>
+</g>
+<text x="805" y="150" font-size="12" fill="#007f70">04 100x100 : tile16</text>
+<g><title>05 tile32, k=100, FMA=enabled, AI=49.35, GFLOP/s=387.789</title>
+<circle cx="665.717" cy="425.209" r="6" fill="#2259b5" stroke="white" stroke-width="1.5"/>
+<text x="677.717" y="431.209" font-size="12" font-weight="bold">05</text>
+</g>
+<text x="805" y="168" font-size="12" fill="#2259b5">05 100x100 : tile32</text>
+<g><title>06 naive, k=1000, FMA=enabled, AI=38.986, GFLOP/s=742.612</title>
+<polygon points="630.908,351.194 623.908,364.194 637.908,364.194" fill="#444444" stroke="white" stroke-width="1.5"/>
+<text x="606.908" y="375.194" font-size="12" font-weight="bold">06</text>
+</g>
+<text x="805" y="186" font-size="12" fill="#444444">06 1000x1000 : naive</text>
+<g><title>07 tile8, k=1000, FMA=enabled, AI=47.956, GFLOP/s=733.618</title>
+<polygon points="661.486,352.451 654.486,365.451 668.486,365.451" fill="#c23d32" stroke="white" stroke-width="1.5"/>
+<text x="673.486" y="369.451" font-size="12" font-weight="bold">07</text>
+</g>
+<text x="805" y="204" font-size="12" fill="#c23d32">07 1000x1000 : tile8</text>
+<g><title>08 tile12, k=1000, FMA=enabled, AI=38.623, GFLOP/s=794.447</title>
+<polygon points="629.528,344.235 622.528,357.235 636.528,357.235" fill="#986200" stroke="white" stroke-width="1.5"/>
+<text x="608.528" y="337.235" font-size="12" font-weight="bold">08</text>
+</g>
+<text x="805" y="222" font-size="12" fill="#986200">08 1000x1000 : tile12</text>
+<g><title>09 tile16, k=1000, FMA=enabled, AI=45.307, GFLOP/s=982.403</title>
+<polygon points="653.096,322.331 646.096,335.331 660.096,335.331" fill="#007f70" stroke="white" stroke-width="1.5"/>
+<text x="663.096" y="316.331" font-size="12" font-weight="bold">09</text>
+</g>
+<text x="805" y="240" font-size="12" fill="#007f70">09 1000x1000 : tile16</text>
+<g><title>10 tile32, k=1000, FMA=enabled, AI=28.146, GFLOP/s=1036.103</title>
+<polygon points="582.8,316.842 575.8,329.842 589.8,329.842" fill="#2259b5" stroke="white" stroke-width="1.5"/>
+<text x="557.8" y="309.842" font-size="12" font-weight="bold">10</text>
+</g>
+<text x="805" y="258" font-size="12" fill="#2259b5">10 1000x1000 : tile32</text>
+<g><title>11 naive, k=2500, FMA=enabled, AI=7.872, GFLOP/s=569.673</title>
+<rect x="388.667" y="379.539" width="12" height="12" fill="#444444" stroke="white" stroke-width="1.5"/>
+<text x="367.667" y="400.539" font-size="12" font-weight="bold">11</text>
+</g>
+<text x="805" y="276" font-size="12" fill="#444444">11 2000x3000 : naive</text>
+<g><title>12 tile8, k=2500, FMA=enabled, AI=3.98, GFLOP/s=494.009</title>
+<rect x="287.972" y="394.238" width="12" height="12" fill="#c23d32" stroke="white" stroke-width="1.5"/>
+<text x="271.972" y="420.238" font-size="12" font-weight="bold">12</text>
+</g>
+<text x="805" y="294" font-size="12" fill="#c23d32">12 2000x3000 : tile8</text>
+<g><title>13 tile12, k=2500, FMA=enabled, AI=5.958, GFLOP/s=683.383</title>
+<rect x="347.533" y="360.767" width="12" height="12" fill="#986200" stroke="white" stroke-width="1.5"/>
+<text x="330.533" y="352.767" font-size="12" font-weight="bold">13</text>
+</g>
+<text x="805" y="312" font-size="12" fill="#986200">13 2000x3000 : tile12</text>
+<g><title>14 tile16, k=2500, FMA=enabled, AI=7.93, GFLOP/s=909.827</title>
+<rect x="389.75" y="331.247" width="12" height="12" fill="#007f70" stroke="white" stroke-width="1.5"/>
+<text x="369.75" y="324.247" font-size="12" font-weight="bold">14</text>
+</g>
+<text x="805" y="330" font-size="12" fill="#007f70">14 2000x3000 : tile16</text>
+<g><title>15 tile32, k=2500, FMA=enabled, AI=15.382, GFLOP/s=1013.522</title>
+<rect x="487.582" y="320.115" width="12" height="12" fill="#2259b5" stroke="white" stroke-width="1.5"/>
+<text x="469.582" y="311.115" font-size="12" font-weight="bold">15</text>
+</g>
+<text x="805" y="348" font-size="12" fill="#2259b5">15 2000x3000 : tile32</text>
+<g><title>16 serial-label-naive, k=100, FMA=enabled, AI=23.011, GFLOP/s=269.393</title>
+<circle cx="553.061" cy="462.783" r="10" fill="none" stroke="#444444" stroke-width="1.5"/>
+</g>
+<text x="805" y="366" font-size="12" fill="#444444">16 100x100 : Serial file / naive</text>
+<g><title>17 naive, k=100, FMA=disabled, AI=22.878, GFLOP/s=263.721</title>
+<circle cx="552.2" cy="464.978" r="9" fill="none" stroke="#444444" stroke-width="1.5"/>
+<text x="561.2" y="491.978" font-size="12" font-weight="bold">17</text>
+</g>
+<text x="805" y="384" font-size="12" fill="#444444">17 100x100 : naive NoFMA</text>
+<g><title>18 tile8, k=100, FMA=disabled, AI=25.622, GFLOP/s=289.33</title>
+<circle cx="568.929" cy="455.419" r="9" fill="none" stroke="#c23d32" stroke-width="1.5"/>
+<text x="577.929" y="482.419" font-size="12" font-weight="bold">18</text>
+</g>
+<text x="805" y="402" font-size="12" fill="#c23d32">18 100x100 : tile8 NoFMA</text>
+<g><title>19 tile12, k=100, FMA=disabled, AI=29.776, GFLOP/s=340.816</title>
+<circle cx="591.116" cy="438.527" r="9" fill="none" stroke="#986200" stroke-width="1.5"/>
+<text x="600.116" y="465.527" font-size="12" font-weight="bold">19</text>
+</g>
+<text x="805" y="420" font-size="12" fill="#986200">19 100x100 : tile12 NoFMA</text>
+<g><title>20 tile16, k=100, FMA=disabled, AI=32.424, GFLOP/s=399.112</title>
+<circle cx="603.695" cy="422.24" r="9" fill="none" stroke="#007f70" stroke-width="1.5"/>
+<text x="612.695" y="449.24" font-size="12" font-weight="bold">20</text>
+</g>
+<text x="805" y="438" font-size="12" fill="#007f70">20 100x100 : tile16 NoFMA</text>
+<g><title>21 tile32, k=100, FMA=disabled, AI=49.053, GFLOP/s=371.304</title>
+<circle cx="664.827" cy="429.689" r="9" fill="none" stroke="#2259b5" stroke-width="1.5"/>
+<text x="673.827" y="456.689" font-size="12" font-weight="bold">21</text>
+</g>
+<text x="805" y="456" font-size="12" fill="#2259b5">21 100x100 : tile32 NoFMA</text>
+<g><title>22 naive, k=1000, FMA=disabled, AI=38.33, GFLOP/s=754.558</title>
+<polygon points="628.402,346.548 618.402,365.548 638.402,365.548" fill="none" stroke="#444444" stroke-width="1.5"/>
+<text x="637.402" y="383.548" font-size="12" font-weight="bold">22</text>
+</g>
+<text x="805" y="474" font-size="12" fill="#444444">22 1000x1000 : naive NoFMA</text>
+<g><title>23 tile8, k=1000, FMA=disabled, AI=50.433, GFLOP/s=734.681</title>
+<polygon points="668.923,349.302 658.923,368.302 678.923,368.302" fill="none" stroke="#c23d32" stroke-width="1.5"/>
+<text x="677.923" y="386.302" font-size="12" font-weight="bold">23</text>
+</g>
+<text x="805" y="492" font-size="12" fill="#c23d32">23 1000x1000 : tile8 NoFMA</text>
+<g><title>24 tile12, k=1000, FMA=disabled, AI=38.079, GFLOP/s=791.797</title>
+<polygon points="627.434,341.579 617.434,360.579 637.434,360.579" fill="none" stroke="#986200" stroke-width="1.5"/>
+<text x="636.434" y="378.579" font-size="12" font-weight="bold">24</text>
+</g>
+<text x="805" y="510" font-size="12" fill="#986200">24 1000x1000 : tile12 NoFMA</text>
+<g><title>25 tile16, k=1000, FMA=disabled, AI=45.044, GFLOP/s=979.236</title>
+<polygon points="652.236,319.664 642.236,338.664 662.236,338.664" fill="none" stroke="#007f70" stroke-width="1.5"/>
+<text x="661.236" y="356.664" font-size="12" font-weight="bold">25</text>
+</g>
+<text x="805" y="528" font-size="12" fill="#007f70">25 1000x1000 : tile16 NoFMA</text>
+<g><title>26 tile32, k=1000, FMA=disabled, AI=28.101, GFLOP/s=1017.151</title>
+<polygon points="582.566,315.746 572.566,334.746 592.566,334.746" fill="none" stroke="#2259b5" stroke-width="1.5"/>
+<text x="591.566" y="352.746" font-size="12" font-weight="bold">26</text>
+</g>
+<text x="805" y="546" font-size="12" fill="#2259b5">26 1000x1000 : tile32 NoFMA</text>
+<g><title>27 naive, k=2500, FMA=disabled, AI=7.872, GFLOP/s=546.001</title>
+<rect x="385.676" y="380.917" width="18" height="18" fill="none" stroke="#444444" stroke-width="1.5"/>
+<text x="403.676" y="416.917" font-size="12" font-weight="bold">27</text>
+</g>
+<text x="805" y="564" font-size="12" fill="#444444">27 2000x3000 : naive NoFMA</text>
+<g><title>28 tile8, k=2500, FMA=disabled, AI=3.98, GFLOP/s=494.537</title>
+<rect x="284.956" y="391.128" width="18" height="18" fill="none" stroke="#c23d32" stroke-width="1.5"/>
+<text x="302.956" y="427.128" font-size="12" font-weight="bold">28</text>
+</g>
+<text x="805" y="582" font-size="12" fill="#c23d32">28 2000x3000 : tile8 NoFMA</text>
+<g><title>29 tile12, k=2500, FMA=disabled, AI=5.959, GFLOP/s=673.842</title>
+<rect x="344.564" y="359.218" width="18" height="18" fill="none" stroke="#986200" stroke-width="1.5"/>
+<text x="362.564" y="395.218" font-size="12" font-weight="bold">29</text>
+</g>
+<text x="805" y="600" font-size="12" fill="#986200">29 2000x3000 : tile12 NoFMA</text>
+<g><title>30 tile16, k=2500, FMA=disabled, AI=7.935, GFLOP/s=887.149</title>
+<rect x="386.838" y="330.851" width="18" height="18" fill="none" stroke="#007f70" stroke-width="1.5"/>
+<text x="404.838" y="366.851" font-size="12" font-weight="bold">30</text>
+</g>
+<text x="805" y="618" font-size="12" fill="#007f70">30 2000x3000 : tile16 NoFMA</text>
+<g><title>31 tile32, k=2500, FMA=disabled, AI=15.394, GFLOP/s=1008.125</title>
+<rect x="484.7" y="317.665" width="18" height="18" fill="none" stroke="#2259b5" stroke-width="1.5"/>
+<text x="502.7" y="353.665" font-size="12" font-weight="bold">31</text>
+</g>
+<text x="805" y="636" font-size="12" fill="#2259b5">31 2000x3000 : tile32 NoFMA</text>
+<path d="M90 90V565H770" fill="none" stroke="#172033" stroke-width="2"/>
+<text x="430" y="624" text-anchor="middle" font-size="18">Hardware arithmetic intensity (FLOP/byte), log scale</text>
+<text x="24" y="330" text-anchor="middle" font-size="18" transform="rotate(-90 24 330)">Hardware performance (GFLOP/s), log scale</text>
+<text x="805" y="674" font-size="13">Circle / triangle / square:</text><text x="805" y="694" font-size="13">k=100 / 1000 / 2500</text>
+<text x="90" y="664" font-size="14">Filled: FMA enabled. Hollow: FMA disabled. Nearly coincident points retain separate IDs.</text>
+<text x="90" y="690" font-size="14">Common roof is FMA-capable FP32 peak, not an instruction-mix-adjusted NoFMA ceiling.</text>
+<text x="90" y="750" font-size="13">All 31 points lie below the reference roof. The Serial-labeled report is another GPU naive run, not CPU timing.</text>
+</g></svg>
+

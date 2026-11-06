@@ -4,8 +4,8 @@ AdditionalCompilerOptions=
 AdditionalDependencies=
 AdditionalDeps=
 AdditionalLibraryDirectories=
-AdditionalOptions=
-AdditionalOptions=
+AdditionalOptions=--fmad=false
+AdditionalOptions=--fmad=false
 CodeGeneration=compute_75,sm_75
 CodeGeneration=compute_75,sm_75
 CompileOut=E:\Dev\EE524\AU26_GPUCompute\Homework-3-MMULT\x64\Release\kernel.cu.obj
