@@ -13,10 +13,18 @@
 #include <cmath>
 #include <new>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "util/stb_image.h"
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "util/stb_image_write.h"
+
 // ==============================
 // Helper Functions
 // ==============================
 cudaError_t single_branch_run(float* in, float* out, int n);
+cudaError_t nested_branch_run(float* in, float* out, int width, int height);
+bool load_jpg_rgb_flattened(const char* imagePath, float* flattenedOut, int width, int height);
+bool save_flattened_png(const char* imagePath, const float* flattenedIn, int width, int height);
 
 // ==============================
 // Kernel Declarations
@@ -43,7 +51,144 @@ __global__ void single_branch_kernel(const float* in, float* out, int n)
         }
     }
 }
-__global__ void nested_branch_kernel(const float* in, float* out, int n);
+__global__ void nested_branch_kernel(const float* in, float* out, int width, int height)
+{
+	// Compute Vector Analysis with Nested Branching
+	// The use case is to get an input of an image (512x512) and change shades of blue to red based on the pixel value,
+	// shades of red to blue based on the pixel value, and other colors to grayscale based on the pixel value. 
+	// Once inside a branch for a color/grayscale, we will branch again on intensity to change the brightness of the color/grayscale.
+    // The input is a 2D array of pixels, and the output is a 2D array of pixels.
+    // using a 16x16 tile.
+
+    int x = blockIdx.x * blockDim.x + threadIdx.x;
+    int y = blockIdx.y * blockDim.y + threadIdx.y;
+
+    if (x >= width || y >= height) {
+        return;
+    }
+
+    int idx = y * width + x;
+    int base = idx * 3;
+
+    float r = in[base + 0];
+    float g = in[base + 1];
+    float b = in[base + 2];
+    int tid = threadIdx.y * blockDim.x + threadIdx.x;
+    int lane = tid & 31;
+
+    float outR = r;
+    float outG = g;
+    float outB = b;
+
+    // Nested branching with color-aware transforms:
+    // 1) Red-dominant pixels   -> shift toward green
+    // 2) Blue-dominant pixels  -> shift toward red
+    // 3) Green-dominant pixels -> shift toward yellow
+    // 4) Other pixels          -> grayscale
+    if (r > g && r > b) {
+        outR = r * 0.10f;
+        outG = r * 1.00f;
+        outB = r * 0.10f;
+
+#pragma unroll 1
+        for (int t = 0; t < 8; ++t) {
+            if (lane < 10) {
+                outR = outR * 0.98f;
+                outG = outG * 1.02f + 0.6f;
+                outB = outB * 0.97f;
+            }
+            else if (lane < 21) {
+                outR = outR * 0.97f;
+                outG = outG * 1.01f + 0.3f;
+                outB = outB * 0.96f;
+            }
+            else {
+                outR = outR * 0.96f;
+                outG = outG * 0.99f + 0.1f;
+                outB = outB * 0.95f;
+            }
+        }
+    }
+    else if (b > r && b > g) {
+        outR = b * 1.00f;
+        outG = b * 0.10f;
+        outB = b * 0.10f;
+
+#pragma unroll 1
+        for (int t = 0; t < 8; ++t) {
+            if (lane < 10) {
+                outR = outR * 1.02f + 0.6f;
+                outG = outG * 0.98f;
+                outB = outB * 0.97f;
+            }
+            else if (lane < 21) {
+                outR = outR * 1.01f + 0.3f;
+                outG = outG * 0.97f;
+                outB = outB * 0.96f;
+            }
+            else {
+                outR = outR * 0.99f + 0.1f;
+                outG = outG * 0.96f;
+                outB = outB * 0.95f;
+            }
+        }
+    }
+    else if (g > r && g > b) {
+        outR = g * 1.00f;
+        outG = g * 1.00f;
+        outB = g * 0.10f;
+
+#pragma unroll 1
+        for (int t = 0; t < 8; ++t) {
+            if (lane < 10) {
+                outR = outR * 1.02f + 0.4f;
+                outG = outG * 1.01f + 0.3f;
+                outB = outB * 0.97f;
+            }
+            else if (lane < 21) {
+                outR = outR * 1.01f + 0.2f;
+                outG = outG * 1.00f + 0.2f;
+                outB = outB * 0.96f;
+            }
+            else {
+                outR = outR * 0.99f + 0.1f;
+                outG = outG * 0.99f + 0.1f;
+                outB = outB * 0.95f;
+            }
+        }
+    }
+    else {
+        float gray = 0.299f * r + 0.587f * g + 0.114f * b;
+        if (lane < 10) {
+            gray = gray * 1.15f;
+        }
+        else if (lane < 21) {
+            gray = gray * 0.85f;
+        }
+        else {
+            gray = gray + 12.0f;
+        }
+        outR = gray;
+        outG = gray;
+        outB = gray;
+
+#pragma unroll 1
+        for (int t = 0; t < 8; ++t) {
+            outR = outR + 0.1f * sinf(outR * 0.01f);
+            outG = outR;
+            outB = outR;
+        }
+    }
+
+    outR = fminf(255.0f, fmaxf(0.0f, outR));
+    outG = fminf(255.0f, fmaxf(0.0f, outG));
+    outB = fminf(255.0f, fmaxf(0.0f, outB));
+
+    out[base + 0] = outR;
+    out[base + 1] = outG;
+    out[base + 2] = outB;
+
+}
 
 // ==============================
 // Host Entry Point
@@ -94,8 +239,51 @@ int main()
     delete[] in;
     delete[] out;
 
-	// Run the nested branch kernel
+    // Run the nested branch kernel
+    const int imageWidth = 1024;
+    const int imageHeight = 1024;
+    const int pixelCount = imageWidth * imageHeight;
+    const int pixelCountRGB = pixelCount * 3;
+
+    float* nestedIn = new (std::nothrow) float[pixelCountRGB];
+    float* nestedOut = new (std::nothrow) float[pixelCountRGB];
+    if (nestedIn == nullptr || nestedOut == nullptr) {
+        fprintf(stderr, "[ERROR] Failed to allocate nested branch host buffers.\n");
+        delete[] nestedIn;
+        delete[] nestedOut;
+        return 1;
+    }
+
+    if (!load_jpg_rgb_flattened("random_rgb_1024.PNG", nestedIn, imageWidth, imageHeight)) {
+        delete[] nestedIn;
+        delete[] nestedOut;
+        return 1;
+    }
+	printf("Image loaded successfully.\n");
+
     printf("[INFO] Launching nested_branch_kernel...\n");
+
+    err = checkCuda(nested_branch_run(nestedIn, nestedOut, imageWidth, imageHeight), "nested_branch_run(nestedIn, nestedOut, imageWidth, imageHeight)");
+    if (err != cudaSuccess) {
+        delete[] nestedIn;
+        delete[] nestedOut;
+        return 1;
+    }
+    else {
+        printf("[INFO] Kernel run completed successfully.\n");
+    }
+
+    if (!save_flattened_png("random_rgb_1024_out.PNG", nestedOut, imageWidth, imageHeight)) {
+        delete[] nestedIn;
+        delete[] nestedOut;
+        return 1;
+    }
+    printf("[INFO] Wrote converted output to random_rgb_1024_out.PNG\n");
+
+    delete[] nestedIn;
+    delete[] nestedOut;
+
+	printf("Nested Branch Kernel with Control Divergence Completed.\n\n");
 
     return 0;
 }
@@ -103,6 +291,61 @@ int main()
 // ==============================
 // Helper Function Implementations
 // ==============================
+
+bool load_jpg_rgb_flattened(const char* imagePath, float* flattenedOut, int width, int height)
+{
+    int loadedWidth = 0;
+    int loadedHeight = 0;
+    int loadedChannels = 0;
+
+    unsigned char* imageData = stbi_load(imagePath, &loadedWidth, &loadedHeight, &loadedChannels, 3);
+    if (imageData == nullptr) {
+        fprintf(stderr, "[ERROR] Failed to load image %s\n", imagePath);
+        return false;
+    }
+
+    if (loadedWidth != width || loadedHeight != height) {
+        fprintf(stderr, "[ERROR] Image size mismatch. Expected %dx%d, got %dx%d\n", width, height, loadedWidth, loadedHeight);
+        stbi_image_free(imageData);
+        return false;
+    }
+
+    int pixelCount = width * height * 3;
+
+    for (int p = 0; p < pixelCount; ++p) {
+        flattenedOut[p] = static_cast<float>(imageData[p]);
+    }
+
+    stbi_image_free(imageData);
+    return true;
+}
+
+bool save_flattened_png(const char* imagePath, const float* flattenedIn, int width, int height)
+{
+    int pixelCount = width * height * 3;
+    unsigned char* outputBytes = new (std::nothrow) unsigned char[pixelCount];
+    if (outputBytes == nullptr) {
+        fprintf(stderr, "[ERROR] Failed to allocate output byte buffer.\n");
+        return false;
+    }
+
+    for (int p = 0; p < pixelCount; ++p) {
+        float v = flattenedIn[p];
+        if (v < 0.0f) v = 0.0f;
+        if (v > 255.0f) v = 255.0f;
+        outputBytes[p] = static_cast<unsigned char>(v);
+    }
+
+    int writeOk = stbi_write_png(imagePath, width, height, 3, outputBytes, width * 3);
+    delete[] outputBytes;
+
+    if (writeOk == 0) {
+        fprintf(stderr, "[ERROR] Failed to write PNG output %s\n", imagePath);
+        return false;
+    }
+
+    return true;
+}
 
 cudaError_t single_branch_run(float* in, float* out, int n)
 {
@@ -155,4 +398,55 @@ cudaError_t single_branch_run(float* in, float* out, int n)
 	cudaFree(out_d);
 
     return cudaSuccess;
+}
+
+cudaError_t nested_branch_run(float* in, float* out, int width, int height)
+{
+	float* in_d = nullptr;
+	float* out_d = nullptr;
+	cudaError_t cudaStatus = cudaSuccess;
+    int pixelCountRGB = width * height * 3;
+	// Part 1: Allocate device memory and copy from host memory to device memory
+    cudaStatus = checkCuda(cudaMalloc((void**)&in_d, pixelCountRGB * sizeof(float)), "cudaMalloc in_d");
+	if (cudaStatus != cudaSuccess) return cudaStatus;
+    cudaStatus = checkCuda(cudaMalloc((void**)&out_d, pixelCountRGB * sizeof(float)), "cudaMalloc out_d");
+	if (cudaStatus != cudaSuccess) {
+		cudaFree(in_d);
+		return cudaStatus;
+	}
+    cudaStatus = checkCuda(cudaMemcpy(in_d, in, pixelCountRGB * sizeof(float), cudaMemcpyHostToDevice), "cudaMemcpy H2D in");
+	if (cudaStatus != cudaSuccess) {
+		cudaFree(in_d);
+		cudaFree(out_d);
+		return cudaStatus;
+	}
+	// Part 2: Call kernel - to launch a grid of threads to perform 2D operation
+	dim3 threadsPerBlock(16, 16);
+	dim3 blocksPerGrid((width + threadsPerBlock.x - 1) / threadsPerBlock.x,
+		(height + threadsPerBlock.y - 1) / threadsPerBlock.y);
+    nested_branch_kernel<<<blocksPerGrid, threadsPerBlock>>>(in_d, out_d, width, height);
+	cudaStatus = checkCuda(cudaGetLastError(), "nested_branch_kernel launch");
+	if (cudaStatus != cudaSuccess) {
+		cudaFree(in_d);
+		cudaFree(out_d);
+		return cudaStatus;
+	}
+	cudaStatus = checkCuda(cudaDeviceSynchronize(), "cudaDeviceSynchronize nested_branch_kernel");
+	if (cudaStatus != cudaSuccess) {
+		cudaFree(in_d);
+		cudaFree(out_d);
+		return cudaStatus;
+	}
+	// Part 3: Copy from device memory to host memory
+    cudaStatus = checkCuda(cudaMemcpy(out, out_d, pixelCountRGB * sizeof(float), cudaMemcpyDeviceToHost), "cudaMemcpy D2H out");
+	if (cudaStatus != cudaSuccess) {
+		cudaFree(in_d);
+		cudaFree(out_d);
+		return cudaStatus;
+	}
+	// Part 4: Free device memory
+	cudaFree(in_d);
+	cudaFree(out_d);
+
+	return cudaSuccess;
 }
