@@ -6,165 +6,153 @@
 * *******************************/
 
 #include "device_launch_parameters.h"
-
+#include "cuda_runtime.h"
 #include <stdio.h>
-#include "Error-Checking.h"
-#include <math.h>
-#include <stdlib.h>
-#include <cuda_runtime.h>
-#include <cstdint>
+#include"Error-Checking.h"
+#include <cstdlib>
+#include <cmath>
+#include <new>
 
-// This file demonstrates branch divergence behavior in CUDA warps.
+// ==============================
+// Helper Functions
+// ==============================
+cudaError_t single_branch_run(float* in, float* out, int n);
 
-__global__ void single_branch_kernel(const float* in, float* out, int n) {
-    // Compute the global thread index for the current thread.
-    int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    // Exit early if this thread maps outside the valid data range.
-    if (idx >= n) return;
+// ==============================
+// Kernel Declarations
+// ==============================
+__global__ void single_branch_kernel(const float* in, float* out, int n)
+{
+	// Compute Vector Analysis with Single Branching
+	// Each thread computes one element of the output vector.
 
-    // Compute lane id (thread position within a warp: 0..31).
-    int lane = threadIdx.x & 31;  // 0..31 within each warp
+    // To force warp divergence, branch on lane id inside each warp.
+    // Lanes 0-15 take one path, lanes 16-31 take the other.
+	// Initially, we used just the value of the input vector (e.g. if it is >100 .0f) to branch, 
+    // but this can lead to all threads in a warp taking the same path, which is not what we want for this exercise.
+	// Not sure why but thinking it is because of optimization in the compiler. So we will use the lane id to branch instead.
 
-    // Single branch divergence: half warp takes one branch, half takes the other.
-    if (lane < 16) {
-        out[idx] = in[idx] + 1.0f;   // GMEM write in branch A
-    }
-    else {
-        out[idx] = in[idx] - 1.0f;   // GMEM write in branch B
-    }
-}
-
-__global__ void nested_branch_kernel(const float* in, float* out, int n) {
-    // Compute the global thread index for the current thread.
-    int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    // Exit early if this thread maps outside the valid data range.
-    if (idx >= n) return;
-
-    // Compute lane id (thread position within a warp: 0..31).
-    int lane = threadIdx.x & 31;
-
-    // Nested divergence: warp is split into multiple control-flow paths.
-    if (lane < 8) {
-        out[idx] = in[idx] + 10.0f;  // path 1
-    }
-    else {
+    int i = threadIdx.x + blockDim.x * blockIdx.x;
+    if (i < n) {
+        int lane = threadIdx.x & 31;
         if (lane < 16) {
-            out[idx] = in[idx] + 20.0f;  // path 2
-        }
-        else if (lane < 24) {
-            out[idx] = in[idx] + 30.0f;  // path 3
+            out[i] = in[i] * 2.0f;
         }
         else {
-            out[idx] = in[idx] + 40.0f;  // path 4
+            out[i] = in[i] * 0.5f;
         }
     }
 }
+__global__ void nested_branch_kernel(const float* in, float* out, int n);
 
-
+// ==============================
+// Host Entry Point
+// ==============================
 int main()
 {
-    // Step 1: define problem size and total byte count.
-    const int n = 256;
-    const size_t bytes = n * sizeof(float);
+    // TODO: Add host-side setup code.
+    // - Allocate and initialize host data.
+    // - Allocate device buffers.
+    // - Copy host data to device.
+    // - Launch kernel(s).
+    // - Copy results back to host.
+    // - Free all resources.
 
-    // Step 2: allocate host buffers for input and output.
-    float* in_h = (float*)malloc(bytes);
-    float* out_h = (float*)malloc(bytes);
-    if (in_h == nullptr || out_h == nullptr) {
-        fprintf(stderr, "Host malloc failed!\n");
-        free(in_h);
-        free(out_h);
+    printf("[INFO] Homework-3 CUDA program started.\n");
+
+    // Randomly generate a very large input vector of floats. The size of the vector should be at least 1 million elements.
+    int n = 1000000;
+    float* in = new float[n];
+    float* out = new float[n];
+    for (int i = 0; i < n; ++i) {
+        in[i] = static_cast<float>(rand()) / RAND_MAX * 200.0f; // Random float between 0 and 200
+    }
+    printf("[INFO] Generated input vector with %d elements.\n", n);
+
+    // Run the single branch kernel
+    printf("[INFO] Launching single_branch_kernel...\n");
+    cudaError_t err = checkCuda(single_branch_run(in, out, n), "single_branch_run(in, out, n)");
+    if (err != cudaSuccess) {
         return 1;
     }
-
-    // Step 3: initialize host input data with a simple ramp.
-    for (int i = 0; i < n; i++) {
-        in_h[i] = (float)i;
+    else {
+        printf("[INFO] Kernel run completed successfully.\n");
     }
 
-    // Step 4: declare device pointers (GPU memory).
-    float* in_d = nullptr;
-    float* out_d = nullptr;
-
-    // Step 5: select GPU device 0.
-    if (checkCuda(cudaSetDevice(0), "cudaSetDevice(0)") != cudaSuccess) {
-        free(in_h);
-        free(out_h);
-        return 1;
+    printf("[INFO] Sample output values:\n");
+    for (int i = 0; i < 8; ++i) {
+        printf("out[%d] = %.3f\n", i, out[i]);
     }
 
-    // Step 6: allocate device input buffer.
-    if (checkCuda(cudaMalloc((void**)&in_d, bytes), "cudaMalloc((void**)&in_d, bytes)") != cudaSuccess) {
-        free(in_h);
-        free(out_h);
-        return 1;
-    }
+    printf("Single Branch Kernel with Control Divergence Completed.\n\n");
 
-    // Step 7: allocate device output buffer.
-    if (checkCuda(cudaMalloc((void**)&out_d, bytes), "cudaMalloc((void**)&out_d, bytes)") != cudaSuccess) {
-        cudaFree(in_d);
-        free(in_h);
-        free(out_h);
-        return 1;
-    }
-
-    // Step 8: copy input data from host to device.
-    if (checkCuda(cudaMemcpy(in_d, in_h, bytes, cudaMemcpyHostToDevice), "cudaMemcpy(in_d, in_h, bytes, cudaMemcpyHostToDevice)") != cudaSuccess) {
-        cudaFree(in_d);
-        cudaFree(out_d);
-        free(in_h);
-        free(out_h);
-        return 1;
-    }
-
-    // Step 9: configure launch dimensions.
-    const int blockSize = 128;
-    const int gridSize = (n + blockSize - 1) / blockSize;
-
-    // Step 10: launch kernel 1 (single_branch_kernel).
-    single_branch_kernel<<<gridSize, blockSize>>>(in_d, out_d, n);
-
-    // Step 11: check asynchronous launch errors.
-    if (checkCuda(cudaGetLastError(), "cudaGetLastError()") != cudaSuccess) {
-        cudaFree(in_d);
-        cudaFree(out_d);
-        free(in_h);
-        free(out_h);
-        return 1;
-    }
-
-    // Step 12: wait for kernel completion and check runtime errors.
-    if (checkCuda(cudaDeviceSynchronize(), "cudaDeviceSynchronize()") != cudaSuccess) {
-        cudaFree(in_d);
-        cudaFree(out_d);
-        free(in_h);
-        free(out_h);
-        return 1;
-    }
-
-    // Step 13: copy results back from device to host.
-    if (checkCuda(cudaMemcpy(out_h, out_d, bytes, cudaMemcpyDeviceToHost), "cudaMemcpy(out_h, out_d, bytes, cudaMemcpyDeviceToHost)") != cudaSuccess) {
-        cudaFree(in_d);
-        cudaFree(out_d);
-        free(in_h);
-        free(out_h);
-        return 1;
-    }
-
-    // Step 14: print the first few output values for quick verification.
-    for (int i = 0; i < 8; i++) {
-        printf("out_h[%d] = %.1f\n", i, out_h[i]);
-    }
-
-    // Step 15: release device and host resources.
-    cudaFree(in_d);
-    cudaFree(out_d);
-    free(in_h);
-    free(out_h);
-
-    // Step 16: reset the device before exiting.
+    // TODO: Optional CUDA cleanup before exit.
     cudaDeviceReset();
+
+    // printf("[INFO] Program finished.\n");
+
+    delete[] in;
+    delete[] out;
+
+	// Run the nested branch kernel
+    printf("[INFO] Launching nested_branch_kernel...\n");
 
     return 0;
 }
 
+// ==============================
+// Helper Function Implementations
+// ==============================
+
+cudaError_t single_branch_run(float* in, float* out, int n)
+{
+	float* in_d = nullptr;
+	float* out_d = nullptr;
+    cudaError_t cudaStatus = cudaSuccess;
+
+    // Part 1: Allocate device memory and copy from host memory to device memory
+    cudaStatus = checkCuda(cudaMalloc((void**)&in_d, n * sizeof(float)), "cudaMalloc in_d");
+    if (cudaStatus != cudaSuccess) return cudaStatus;
+    cudaStatus = checkCuda(cudaMalloc((void**)&out_d, n * sizeof(float)), "cudaMalloc out_d");
+    if (cudaStatus != cudaSuccess) {
+        cudaFree(in_d);
+        return cudaStatus;
+    }
+    cudaStatus = checkCuda(cudaMemcpy(in_d, in, n * sizeof(float), cudaMemcpyHostToDevice), "cudaMemcpy H2D in");
+    if (cudaStatus != cudaSuccess) {
+        cudaFree(in_d);
+        cudaFree(out_d);
+        return cudaStatus;
+    }
+
+    // Part 2: Call kernel - to launch a grid of threads to perform 2D operation
+	int threadsPerBlock = 256;
+	int blocksPerGrid = (n + threadsPerBlock - 1) / threadsPerBlock;
+	single_branch_kernel<<<blocksPerGrid, threadsPerBlock>>>(in_d, out_d, n);
+    cudaStatus = checkCuda(cudaGetLastError(), "single_branch_kernel launch");
+    if (cudaStatus != cudaSuccess) {
+        cudaFree(in_d);
+        cudaFree(out_d);
+        return cudaStatus;
+    }
+    cudaStatus = checkCuda(cudaDeviceSynchronize(), "cudaDeviceSynchronize single_branch_kernel");
+    if (cudaStatus != cudaSuccess) {
+        cudaFree(in_d);
+        cudaFree(out_d);
+        return cudaStatus;
+    }
+
+    // Part 3: Copy from device memory to host memory
+    cudaStatus = checkCuda(cudaMemcpy(out, out_d, n * sizeof(float), cudaMemcpyDeviceToHost), "cudaMemcpy D2H out");
+    if (cudaStatus != cudaSuccess) {
+        cudaFree(in_d);
+        cudaFree(out_d);
+        return cudaStatus;
+    }
+
+    // Part 4: Free device memory
+	cudaFree(in_d);
+	cudaFree(out_d);
+
+    return cudaSuccess;
+}
