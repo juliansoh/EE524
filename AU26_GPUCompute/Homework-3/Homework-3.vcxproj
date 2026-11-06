@@ -87,8 +87,10 @@
     <ClInclude Include="Error-Checking.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="both.ncu-repz" />
-    <None Include="test.ncu-repz" />
+    <None Include="Diverge-Profile.ncu-repz" />
+    <None Include="Divergence-vs-NoDivergence-Analysis.md" />
+    <None Include="make_pdf.ps1" />
+    <None Include="NoDiverge-Profile.ncu-repz" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

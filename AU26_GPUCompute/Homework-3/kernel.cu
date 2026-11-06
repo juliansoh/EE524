@@ -8,10 +8,11 @@
 #include "device_launch_parameters.h"
 #include "cuda_runtime.h"
 #include <stdio.h>
-#include"Error-Checking.h"
+#include "Error-Checking.h"
 #include <cstdlib>
 #include <cmath>
 #include <new>
+#include <string.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "util/stb_image.h"
@@ -21,10 +22,10 @@
 // ==============================
 // Helper Functions
 // ==============================
-cudaError_t single_branch_run(float* in, float* out, int n);
-cudaError_t nested_branch_run(float* in, float* out, int width, int height);
-bool load_jpg_rgb_flattened(const char* imagePath, float* flattenedOut, int width, int height);
-bool save_flattened_png(const char* imagePath, const float* flattenedIn, int width, int height);
+cudaError_t single_branch_run(float* in, float* out, int n, bool divergeMode);
+cudaError_t nested_branch_run(float* in, float* out, int width, int height, bool divergeMode);
+bool load_image_rgb_flattened(const char* imagePath, float* flattenedOut, int width, int height);
+bool save_flattened_image(const char* imagePath, const float* flattenedIn, int width, int height);
 
 // ==============================
 // Kernel Declarations
@@ -51,6 +52,15 @@ __global__ void single_branch_kernel(const float* in, float* out, int n)
         }
     }
 }
+
+__global__ void single_nodiverge_kernel(const float* in, float* out, int n)
+{
+    int i = threadIdx.x + blockDim.x * blockIdx.x;
+    if (i < n) {
+        out[i] = in[i] * 1.25f;
+    }
+}
+
 __global__ void nested_branch_kernel(const float* in, float* out, int width, int height)
 {
 	// Compute Vector Analysis with Nested Branching
@@ -190,10 +200,34 @@ __global__ void nested_branch_kernel(const float* in, float* out, int width, int
 
 }
 
+__global__ void nested_nodiverge_kernel(const float* in, float* out, int width, int height)
+{
+    int x = blockIdx.x * blockDim.x + threadIdx.x;
+    int y = blockIdx.y * blockDim.y + threadIdx.y;
+
+    if (x >= width || y >= height) {
+        return;
+    }
+
+    int idx = y * width + x;
+    int base = idx * 3;
+
+    float r = in[base + 0];
+    float g = in[base + 1];
+    float b = in[base + 2];
+
+    float gray = 0.299f * r + 0.587f * g + 0.114f * b;
+    gray = fminf(255.0f, fmaxf(0.0f, gray));
+
+    out[base + 0] = gray;
+    out[base + 1] = gray;
+    out[base + 2] = gray;
+}
+
 // ==============================
 // Host Entry Point
 // ==============================
-int main()
+int main(int argc, char** argv)
 {
     // TODO: Add host-side setup code.
     // - Allocate and initialize host data.
@@ -203,7 +237,15 @@ int main()
     // - Copy results back to host.
     // - Free all resources.
 
+    if (argc != 2 || (strcmp(argv[1], "-diverge") != 0 && strcmp(argv[1], "-nodiverge") != 0)) {
+        printf("Usage: Homework-3.exe -diverge | -nodiverge\n");
+        return 1;
+    }
+
+    bool divergeMode = (strcmp(argv[1], "-diverge") == 0);
+
     printf("[INFO] Homework-3 CUDA program started.\n");
+    printf("[INFO] Mode: %s\n", divergeMode ? "diverge" : "nodiverge");
 
     // Randomly generate a very large input vector of floats. The size of the vector should be at least 1 million elements.
     int n = 1000000;
@@ -216,7 +258,7 @@ int main()
 
     // Run the single branch kernel
     printf("[INFO] Launching single_branch_kernel...\n");
-    cudaError_t err = checkCuda(single_branch_run(in, out, n), "single_branch_run(in, out, n)");
+    cudaError_t err = checkCuda(single_branch_run(in, out, n, divergeMode), "single_branch_run(in, out, n, divergeMode)");
     if (err != cudaSuccess) {
         return 1;
     }
@@ -254,7 +296,10 @@ int main()
         return 1;
     }
 
-    if (!load_jpg_rgb_flattened("random_rgb_1024.PNG", nestedIn, imageWidth, imageHeight)) {
+    const char* nestedInputFile = divergeMode ? "random_rgb_1024.PNG" : "input_1024x1024.jpg";
+    const char* nestedOutputFile = divergeMode ? "random_rgb_1024_out.PNG" : "input_1024x1024_out.jpg";
+
+    if (!load_image_rgb_flattened(nestedInputFile, nestedIn, imageWidth, imageHeight)) {
         delete[] nestedIn;
         delete[] nestedOut;
         return 1;
@@ -263,7 +308,7 @@ int main()
 
     printf("[INFO] Launching nested_branch_kernel...\n");
 
-    err = checkCuda(nested_branch_run(nestedIn, nestedOut, imageWidth, imageHeight), "nested_branch_run(nestedIn, nestedOut, imageWidth, imageHeight)");
+    err = checkCuda(nested_branch_run(nestedIn, nestedOut, imageWidth, imageHeight, divergeMode), "nested_branch_run(nestedIn, nestedOut, imageWidth, imageHeight, divergeMode)");
     if (err != cudaSuccess) {
         delete[] nestedIn;
         delete[] nestedOut;
@@ -273,12 +318,12 @@ int main()
         printf("[INFO] Kernel run completed successfully.\n");
     }
 
-    if (!save_flattened_png("random_rgb_1024_out.PNG", nestedOut, imageWidth, imageHeight)) {
+    if (!save_flattened_image(nestedOutputFile, nestedOut, imageWidth, imageHeight)) {
         delete[] nestedIn;
         delete[] nestedOut;
         return 1;
     }
-    printf("[INFO] Wrote converted output to random_rgb_1024_out.PNG\n");
+    printf("[INFO] Wrote converted output to %s\n", nestedOutputFile);
 
     delete[] nestedIn;
     delete[] nestedOut;
@@ -292,7 +337,7 @@ int main()
 // Helper Function Implementations
 // ==============================
 
-bool load_jpg_rgb_flattened(const char* imagePath, float* flattenedOut, int width, int height)
+bool load_image_rgb_flattened(const char* imagePath, float* flattenedOut, int width, int height)
 {
     int loadedWidth = 0;
     int loadedHeight = 0;
@@ -320,7 +365,7 @@ bool load_jpg_rgb_flattened(const char* imagePath, float* flattenedOut, int widt
     return true;
 }
 
-bool save_flattened_png(const char* imagePath, const float* flattenedIn, int width, int height)
+bool save_flattened_image(const char* imagePath, const float* flattenedIn, int width, int height)
 {
     int pixelCount = width * height * 3;
     unsigned char* outputBytes = new (std::nothrow) unsigned char[pixelCount];
@@ -336,18 +381,25 @@ bool save_flattened_png(const char* imagePath, const float* flattenedIn, int wid
         outputBytes[p] = static_cast<unsigned char>(v);
     }
 
-    int writeOk = stbi_write_png(imagePath, width, height, 3, outputBytes, width * 3);
+    int writeOk = 0;
+    const char* ext = strrchr(imagePath, '.');
+    if (ext != nullptr && (_stricmp(ext, ".jpg") == 0 || _stricmp(ext, ".jpeg") == 0)) {
+        writeOk = stbi_write_jpg(imagePath, width, height, 3, outputBytes, 95);
+    }
+    else {
+        writeOk = stbi_write_png(imagePath, width, height, 3, outputBytes, width * 3);
+    }
     delete[] outputBytes;
 
     if (writeOk == 0) {
-        fprintf(stderr, "[ERROR] Failed to write PNG output %s\n", imagePath);
+        fprintf(stderr, "[ERROR] Failed to write image output %s\n", imagePath);
         return false;
     }
 
     return true;
 }
 
-cudaError_t single_branch_run(float* in, float* out, int n)
+cudaError_t single_branch_run(float* in, float* out, int n, bool divergeMode)
 {
 	float* in_d = nullptr;
 	float* out_d = nullptr;
@@ -371,7 +423,12 @@ cudaError_t single_branch_run(float* in, float* out, int n)
     // Part 2: Call kernel - to launch a grid of threads to perform 2D operation
 	int threadsPerBlock = 256;
 	int blocksPerGrid = (n + threadsPerBlock - 1) / threadsPerBlock;
-	single_branch_kernel<<<blocksPerGrid, threadsPerBlock>>>(in_d, out_d, n);
+    if (divergeMode) {
+        single_branch_kernel<<<blocksPerGrid, threadsPerBlock>>>(in_d, out_d, n);
+    }
+    else {
+        single_nodiverge_kernel<<<blocksPerGrid, threadsPerBlock>>>(in_d, out_d, n);
+    }
     cudaStatus = checkCuda(cudaGetLastError(), "single_branch_kernel launch");
     if (cudaStatus != cudaSuccess) {
         cudaFree(in_d);
@@ -400,7 +457,7 @@ cudaError_t single_branch_run(float* in, float* out, int n)
     return cudaSuccess;
 }
 
-cudaError_t nested_branch_run(float* in, float* out, int width, int height)
+cudaError_t nested_branch_run(float* in, float* out, int width, int height, bool divergeMode)
 {
 	float* in_d = nullptr;
 	float* out_d = nullptr;
@@ -424,7 +481,12 @@ cudaError_t nested_branch_run(float* in, float* out, int width, int height)
 	dim3 threadsPerBlock(16, 16);
 	dim3 blocksPerGrid((width + threadsPerBlock.x - 1) / threadsPerBlock.x,
 		(height + threadsPerBlock.y - 1) / threadsPerBlock.y);
-    nested_branch_kernel<<<blocksPerGrid, threadsPerBlock>>>(in_d, out_d, width, height);
+    if (divergeMode) {
+        nested_branch_kernel<<<blocksPerGrid, threadsPerBlock>>>(in_d, out_d, width, height);
+    }
+    else {
+        nested_nodiverge_kernel<<<blocksPerGrid, threadsPerBlock>>>(in_d, out_d, width, height);
+    }
 	cudaStatus = checkCuda(cudaGetLastError(), "nested_branch_kernel launch");
 	if (cudaStatus != cudaSuccess) {
 		cudaFree(in_d);

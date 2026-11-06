@@ -1,0 +1,135 @@
+﻿<!doctype html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<title>Divergence Analysis</title>
+<style>
+body{font-family:Segoe UI,Arial,sans-serif;line-height:1.45;color:#1f2937;max-width:900px;margin:40px auto;padding:0 24px;}
+h1{font-size:30px;border-bottom:2px solid #e5e7eb;padding-bottom:8px;margin-top:0;}
+h2{font-size:22px;margin-top:28px;color:#111827;}
+h3{font-size:18px;margin-top:22px;color:#111827;}
+p{margin:10px 0;}
+ul{margin:8px 0 14px 24px;}
+li{margin:4px 0;}
+hr{border:none;border-top:1px solid #e5e7eb;margin:22px 0;}
+code{background:#f3f4f6;padding:1px 5px;border-radius:4px;}
+</style>
+</head>
+<body>
+<h1>Control Divergence Analysis (Single and Nested Kernels)</h1>
+<p></p>
+<h2>How Nsight Compute identifies control divergence</h2>
+<p></p>
+<p>Nsight Compute captures divergence most directly through branch and warp-efficiency counters:</p>
+<p></p>
+<ul>
+<li>**Source Counters â†’ Avg. Divergent Branches**</li>
+<li>**Source Counters â†’ Branch Efficiency**</li>
+<li>**Warp State Statistics â†’ Avg. Active Threads Per Warp**</li>
+<li>**Warp State Statistics â†’ Avg. Not Predicated Off Threads Per Warp**</li>
+</ul>
+<p></p>
+<p>When divergence is present, branch efficiency drops, divergent branch count rises above zero, and the effective active threads per warp drops below 32.</p>
+<p></p>
+<hr/>
+<p></p>
+<h2>Single-branch use case: Diverge vs No-Diverge</h2>
+<p></p>
+<h3>Diverge configuration (`single_branch_kernel`)</h3>
+<ul>
+<li>**Avg. Divergent Branches:** 195.31</li>
+<li>**Branch Efficiency:** 85.71%</li>
+<li>**Avg. Active Threads Per Warp:** 22.75</li>
+<li>**Avg. Not Predicated Off Threads Per Warp:** 22.31</li>
+<li>**Theoretical Occupancy:** 100%</li>
+<li>**Achieved Occupancy:** 94.84%</li>
+<li>**Theoretical Active Warps Per SM:** 32</li>
+<li>**Achieved Active Warps Per SM:** 30.35</li>
+</ul>
+<p></p>
+<h3>No-diverge configuration (`single_nodiverge_kernel`)</h3>
+<ul>
+<li>**Avg. Divergent Branches:** 0</li>
+<li>**Branch Efficiency:** 100%</li>
+<li>**Avg. Active Threads Per Warp:** 32</li>
+<li>**Avg. Not Predicated Off Threads Per Warp:** 31.52</li>
+<li>**Theoretical Occupancy:** 100%</li>
+<li>**Achieved Occupancy:** 92.75%</li>
+<li>**Theoretical Active Warps Per SM:** 32</li>
+<li>**Achieved Active Warps Per SM:** 29.68</li>
+</ul>
+<p></p>
+<h3>Interpretation</h3>
+<p>The single-branch divergent run shows the expected divergence signature:</p>
+<ul>
+<li>Non-zero divergent branches</li>
+<li>Lower branch efficiency</li>
+<li>Reduced active threads per warp</li>
+</ul>
+<p></p>
+<p>The no-diverge run is near ideal warp coherence (32 active threads, 0 divergent branches).</p>
+<p></p>
+<hr/>
+<p></p>
+<h2>Nested-branch use case: Diverge vs No-Diverge</h2>
+<p></p>
+<h3>Diverge configuration (`nested_branch_kernel`)</h3>
+<ul>
+<li>**Avg. Divergent Branches:** 10,525.24</li>
+<li>**Branch Efficiency:** 85.76%</li>
+<li>**Avg. Active Threads Per Warp:** 8.95</li>
+<li>**Avg. Not Predicated Off Threads Per Warp:** 8.78</li>
+<li>**Theoretical Occupancy:** 100%</li>
+<li>**Achieved Occupancy:** 81.48%</li>
+<li>**Theoretical Active Warps Per SM:** 32</li>
+<li>**Achieved Active Warps Per SM:** 26.07</li>
+</ul>
+<p></p>
+<h3>No-diverge configuration (`nested_nodiverge_kernel`)</h3>
+<ul>
+<li>**Avg. Divergent Branches:** 0</li>
+<li>**Branch Efficiency:** 100%</li>
+<li>**Avg. Active Threads Per Warp:** 32</li>
+<li>**Avg. Not Predicated Off Threads Per Warp:** 31.84</li>
+<li>**Theoretical Occupancy:** 100%</li>
+<li>**Achieved Occupancy:** 95.58%</li>
+<li>**Theoretical Active Warps Per SM:** 32</li>
+<li>**Achieved Active Warps Per SM:** 30.59</li>
+</ul>
+<p></p>
+<h3>Interpretation</h3>
+<p>The nested divergent run exhibits very strong divergence behavior:</p>
+<ul>
+<li>Very high divergent branch activity</li>
+<li>Significant reduction in active threads per warp</li>
+<li>Lower achieved occupancy and active warps per SM compared to no-diverge</li>
+</ul>
+<p></p>
+<hr/>
+<p></p>
+<h2>Other GPU Speed of Light metrics that changed</h2>
+<p></p>
+<p>Yes, several general GPU metrics changed between divergent and non-divergent runs.</p>
+<p></p>
+<h3>Single-branch</h3>
+<ul>
+<li>**Duration:** 76.90 us (diverge) vs 51.71 us (no-diverge)</li>
+<li>**Memory Throughput (%):** 29.84% (diverge) vs 43.14% (no-diverge)</li>
+<li>**Compute (SM) Throughput (%):** 26.18% (diverge) vs 24.87% (no-diverge)</li>
+</ul>
+<p></p>
+<h3>Nested-branch</h3>
+<ul>
+<li>**Duration:** 1.82 ms (diverge) vs 134.30 us (no-diverge)</li>
+<li>**Memory Throughput (%):** 4.19% (diverge) vs 56.16% (no-diverge)</li>
+<li>**Compute (SM) Throughput (%):** 30.47% (diverge) vs 30.19% (no-diverge)</li>
+</ul>
+<p></p>
+<h3>Overall takeaway</h3>
+<ul>
+<li>**Theoretical occupancy** can remain high in both cases because it is resource-limit based.</li>
+<li>**Achieved occupancy, active warps, branch efficiency, and active threads per warp** are the practical indicators of control-flow efficiency.</li>
+<li>Divergence is clearly identifiable in your runs through the branch and warp-state counters.</li>
+</ul>
+</body></html>
+
