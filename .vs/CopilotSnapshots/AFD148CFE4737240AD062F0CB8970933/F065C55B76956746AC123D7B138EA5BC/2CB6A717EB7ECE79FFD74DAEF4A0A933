@@ -1,0 +1,426 @@
+﻿/********************************
+* Author: Julian Soh
+* Date: Fall quarter 2026
+* EE P 524 - GPU Programming
+* Homework 3 - CUDA Kernels
+* *******************************/
+
+#include "device_launch_parameters.h"
+#include "cuda_runtime.h"
+#include <stdio.h>
+#include"Error-Checking.h"
+#include <cstdlib>
+#include <cmath>
+#include <new>
+
+#define STB_IMAGE_IMPLEMENTATION
+#include "util/stb_image.h"
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "util/stb_image_write.h"
+
+// ==============================
+// Helper Functions
+// ==============================
+cudaError_t single_branch_run(float* in, float* out, int n);
+cudaError_t nested_branch_run(float* in, float* out, int width, int height);
+bool load_jpg_rgb_flattened(const char* imagePath, float* flattenedOut, int width, int height);
+bool save_flattened_jpg(const char* imagePath, const float* flattenedIn, int width, int height, int quality);
+
+// ==============================
+// Kernel Declarations
+// ==============================
+__global__ void single_branch_kernel(const float* in, float* out, int n)
+{
+	// Compute Vector Analysis with Single Branching
+	// Each thread computes one element of the output vector.
+
+    // To force warp divergence, branch on lane id inside each warp.
+    // Lanes 0-15 take one path, lanes 16-31 take the other.
+	// Initially, we used just the value of the input vector (e.g. if it is >100 .0f) to branch, 
+    // but this can lead to all threads in a warp taking the same path, which is not what we want for this exercise.
+	// Not sure why but thinking it is because of optimization in the compiler. So we will use the lane id to branch instead.
+
+    int i = threadIdx.x + blockDim.x * blockIdx.x;
+    if (i < n) {
+        int lane = threadIdx.x & 31;
+        if (lane < 16) {
+            out[i] = in[i] * 2.0f;
+        }
+        else {
+            out[i] = in[i] * 0.5f;
+        }
+    }
+}
+__global__ void nested_branch_kernel(const float* in, float* out, int width, int height)
+{
+	// Compute Vector Analysis with Nested Branching
+	// The use case is to get an input of an image (512x512) and change shades of blue to red based on the pixel value,
+	// shades of red to blue based on the pixel value, and other colors to grayscale based on the pixel value. 
+	// Once inside a branch for a color/grayscale, we will branch again on intensity to change the brightness of the color/grayscale.
+    // The input is a 2D array of pixels, and the output is a 2D array of pixels.
+    // using a 16x16 tile.
+
+    int x = blockIdx.x * blockDim.x + threadIdx.x;
+    int y = blockIdx.y * blockDim.y + threadIdx.y;
+
+    if (x >= width || y >= height) {
+        return;
+    }
+
+    int idx = y * width + x;
+    int base = idx * 3;
+
+    float r = in[base + 0];
+    float g = in[base + 1];
+    float b = in[base + 2];
+    int lane = threadIdx.x & 31;
+
+    float outR = r;
+    float outG = g;
+    float outB = b;
+
+    // Nested branching with color-aware transforms:
+    // 1) Green-dominant pixels -> shift toward brown
+    // 2) Blue-dominant pixels  -> shift toward black
+    // 3) Other pixels          -> grayscale
+    if (g > r && g > b) {
+        outR = g * 0.55f;
+        outG = g * 0.27f;
+        outB = g * 0.08f;
+
+#pragma unroll 1
+        for (int t = 0; t < 8; ++t) {
+            if (lane < 10) {
+                outR = outR * 1.02f + 0.6f;
+                outG = outG * 0.99f;
+                outB = outB * 0.98f;
+            }
+            else if (lane < 21) {
+                outR = outR * 1.01f + 0.3f;
+                outG = outG * 0.98f;
+                outB = outB * 0.97f;
+            }
+            else {
+                outR = outR * 0.99f + 0.1f;
+                outG = outG * 0.97f;
+                outB = outB * 0.96f;
+            }
+        }
+    }
+    else if (b > r && b > g) {
+        outR = 0.0f;
+        outG = 0.0f;
+        outB = 0.0f;
+
+#pragma unroll 1
+        for (int t = 0; t < 8; ++t) {
+            if (lane < 10) {
+                outR = outR * 0.95f;
+                outG = outG * 0.95f;
+                outB = outB * 0.95f;
+            }
+            else if (lane < 21) {
+                outR = outR * 0.90f;
+                outG = outG * 0.90f;
+                outB = outB * 0.90f;
+            }
+            else {
+                outR = outR * 0.85f;
+                outG = outG * 0.85f;
+                outB = outB * 0.85f;
+            }
+        }
+    }
+    else {
+        float gray = 0.299f * r + 0.587f * g + 0.114f * b;
+        if (lane < 10) {
+            gray = gray * 1.15f;
+        }
+        else if (lane < 21) {
+            gray = gray * 0.85f;
+        }
+        else {
+            gray = gray + 12.0f;
+        }
+        outR = gray;
+        outG = gray;
+        outB = gray;
+
+#pragma unroll 1
+        for (int t = 0; t < 8; ++t) {
+            outR = outR + 0.1f * sinf(outR * 0.01f);
+            outG = outR;
+            outB = outR;
+        }
+    }
+
+    outR = fminf(255.0f, fmaxf(0.0f, outR));
+    outG = fminf(255.0f, fmaxf(0.0f, outG));
+    outB = fminf(255.0f, fmaxf(0.0f, outB));
+
+    out[base + 0] = outR;
+    out[base + 1] = outG;
+    out[base + 2] = outB;
+
+}
+
+// ==============================
+// Host Entry Point
+// ==============================
+int main()
+{
+    // TODO: Add host-side setup code.
+    // - Allocate and initialize host data.
+    // - Allocate device buffers.
+    // - Copy host data to device.
+    // - Launch kernel(s).
+    // - Copy results back to host.
+    // - Free all resources.
+
+    printf("[INFO] Homework-3 CUDA program started.\n");
+
+    // Randomly generate a very large input vector of floats. The size of the vector should be at least 1 million elements.
+    int n = 1000000;
+    float* in = new float[n];
+    float* out = new float[n];
+    for (int i = 0; i < n; ++i) {
+        in[i] = static_cast<float>(rand()) / RAND_MAX * 200.0f; // Random float between 0 and 200
+    }
+    printf("[INFO] Generated input vector with %d elements.\n", n);
+
+    // Run the single branch kernel
+    printf("[INFO] Launching single_branch_kernel...\n");
+    cudaError_t err = checkCuda(single_branch_run(in, out, n), "single_branch_run(in, out, n)");
+    if (err != cudaSuccess) {
+        return 1;
+    }
+    else {
+        printf("[INFO] Kernel run completed successfully.\n");
+    }
+
+    printf("[INFO] Sample output values:\n");
+    for (int i = 0; i < 8; ++i) {
+        printf("out[%d] = %.3f\n", i, out[i]);
+    }
+
+    printf("Single Branch Kernel with Control Divergence Completed.\n\n");
+
+    // TODO: Optional CUDA cleanup before exit.
+    cudaDeviceReset();
+
+    // printf("[INFO] Program finished.\n");
+
+    delete[] in;
+    delete[] out;
+
+    // Run the nested branch kernel
+    const int imageWidth = 1024;
+    const int imageHeight = 1024;
+    const int pixelCount = imageWidth * imageHeight;
+    const int pixelCountRGB = pixelCount * 3;
+
+    float* nestedIn = new (std::nothrow) float[pixelCountRGB];
+    float* nestedOut = new (std::nothrow) float[pixelCountRGB];
+    if (nestedIn == nullptr || nestedOut == nullptr) {
+        fprintf(stderr, "[ERROR] Failed to allocate nested branch host buffers.\n");
+        delete[] nestedIn;
+        delete[] nestedOut;
+        return 1;
+    }
+
+    if (!load_jpg_rgb_flattened("busy_natural_1024.jpg", nestedIn, imageWidth, imageHeight)) {
+        delete[] nestedIn;
+        delete[] nestedOut;
+        return 1;
+    }
+	printf("Image loaded successfully.\n");
+
+    printf("[INFO] Launching nested_branch_kernel...\n");
+
+    err = checkCuda(nested_branch_run(nestedIn, nestedOut, imageWidth, imageHeight), "nested_branch_run(nestedIn, nestedOut, imageWidth, imageHeight)");
+    if (err != cudaSuccess) {
+        delete[] nestedIn;
+        delete[] nestedOut;
+        return 1;
+    }
+    else {
+        printf("[INFO] Kernel run completed successfully.\n");
+    }
+
+    if (!save_flattened_jpg("busy_natural_1024_out.jpg", nestedOut, imageWidth, imageHeight, 95)) {
+        delete[] nestedIn;
+        delete[] nestedOut;
+        return 1;
+    }
+    printf("[INFO] Wrote converted output to busy_natural_1024_out.jpg\n");
+
+    delete[] nestedIn;
+    delete[] nestedOut;
+
+	printf("Nested Branch Kernel with Control Divergence Completed.\n\n");
+
+    return 0;
+}
+
+// ==============================
+// Helper Function Implementations
+// ==============================
+
+bool load_jpg_rgb_flattened(const char* imagePath, float* flattenedOut, int width, int height)
+{
+    int loadedWidth = 0;
+    int loadedHeight = 0;
+    int loadedChannels = 0;
+
+    unsigned char* imageData = stbi_load(imagePath, &loadedWidth, &loadedHeight, &loadedChannels, 3);
+    if (imageData == nullptr) {
+        fprintf(stderr, "[ERROR] Failed to load image %s\n", imagePath);
+        return false;
+    }
+
+    if (loadedWidth != width || loadedHeight != height) {
+        fprintf(stderr, "[ERROR] Image size mismatch. Expected %dx%d, got %dx%d\n", width, height, loadedWidth, loadedHeight);
+        stbi_image_free(imageData);
+        return false;
+    }
+
+    int pixelCount = width * height * 3;
+
+    for (int p = 0; p < pixelCount; ++p) {
+        flattenedOut[p] = static_cast<float>(imageData[p]);
+    }
+
+    stbi_image_free(imageData);
+    return true;
+}
+
+bool save_flattened_jpg(const char* imagePath, const float* flattenedIn, int width, int height, int quality)
+{
+    int pixelCount = width * height * 3;
+    unsigned char* outputBytes = new (std::nothrow) unsigned char[pixelCount];
+    if (outputBytes == nullptr) {
+        fprintf(stderr, "[ERROR] Failed to allocate output byte buffer.\n");
+        return false;
+    }
+
+    for (int p = 0; p < pixelCount; ++p) {
+        float v = flattenedIn[p];
+        if (v < 0.0f) v = 0.0f;
+        if (v > 255.0f) v = 255.0f;
+        outputBytes[p] = static_cast<unsigned char>(v);
+    }
+
+    int writeOk = stbi_write_jpg(imagePath, width, height, 3, outputBytes, quality);
+    delete[] outputBytes;
+
+    if (writeOk == 0) {
+        fprintf(stderr, "[ERROR] Failed to write JPG output %s\n", imagePath);
+        return false;
+    }
+
+    return true;
+}
+
+cudaError_t single_branch_run(float* in, float* out, int n)
+{
+	float* in_d = nullptr;
+	float* out_d = nullptr;
+    cudaError_t cudaStatus = cudaSuccess;
+
+    // Part 1: Allocate device memory and copy from host memory to device memory
+    cudaStatus = checkCuda(cudaMalloc((void**)&in_d, n * sizeof(float)), "cudaMalloc in_d");
+    if (cudaStatus != cudaSuccess) return cudaStatus;
+    cudaStatus = checkCuda(cudaMalloc((void**)&out_d, n * sizeof(float)), "cudaMalloc out_d");
+    if (cudaStatus != cudaSuccess) {
+        cudaFree(in_d);
+        return cudaStatus;
+    }
+    cudaStatus = checkCuda(cudaMemcpy(in_d, in, n * sizeof(float), cudaMemcpyHostToDevice), "cudaMemcpy H2D in");
+    if (cudaStatus != cudaSuccess) {
+        cudaFree(in_d);
+        cudaFree(out_d);
+        return cudaStatus;
+    }
+
+    // Part 2: Call kernel - to launch a grid of threads to perform 2D operation
+	int threadsPerBlock = 256;
+	int blocksPerGrid = (n + threadsPerBlock - 1) / threadsPerBlock;
+	single_branch_kernel<<<blocksPerGrid, threadsPerBlock>>>(in_d, out_d, n);
+    cudaStatus = checkCuda(cudaGetLastError(), "single_branch_kernel launch");
+    if (cudaStatus != cudaSuccess) {
+        cudaFree(in_d);
+        cudaFree(out_d);
+        return cudaStatus;
+    }
+    cudaStatus = checkCuda(cudaDeviceSynchronize(), "cudaDeviceSynchronize single_branch_kernel");
+    if (cudaStatus != cudaSuccess) {
+        cudaFree(in_d);
+        cudaFree(out_d);
+        return cudaStatus;
+    }
+
+    // Part 3: Copy from device memory to host memory
+    cudaStatus = checkCuda(cudaMemcpy(out, out_d, n * sizeof(float), cudaMemcpyDeviceToHost), "cudaMemcpy D2H out");
+    if (cudaStatus != cudaSuccess) {
+        cudaFree(in_d);
+        cudaFree(out_d);
+        return cudaStatus;
+    }
+
+    // Part 4: Free device memory
+	cudaFree(in_d);
+	cudaFree(out_d);
+
+    return cudaSuccess;
+}
+
+cudaError_t nested_branch_run(float* in, float* out, int width, int height)
+{
+	float* in_d = nullptr;
+	float* out_d = nullptr;
+	cudaError_t cudaStatus = cudaSuccess;
+    int pixelCountRGB = width * height * 3;
+	// Part 1: Allocate device memory and copy from host memory to device memory
+    cudaStatus = checkCuda(cudaMalloc((void**)&in_d, pixelCountRGB * sizeof(float)), "cudaMalloc in_d");
+	if (cudaStatus != cudaSuccess) return cudaStatus;
+    cudaStatus = checkCuda(cudaMalloc((void**)&out_d, pixelCountRGB * sizeof(float)), "cudaMalloc out_d");
+	if (cudaStatus != cudaSuccess) {
+		cudaFree(in_d);
+		return cudaStatus;
+	}
+    cudaStatus = checkCuda(cudaMemcpy(in_d, in, pixelCountRGB * sizeof(float), cudaMemcpyHostToDevice), "cudaMemcpy H2D in");
+	if (cudaStatus != cudaSuccess) {
+		cudaFree(in_d);
+		cudaFree(out_d);
+		return cudaStatus;
+	}
+	// Part 2: Call kernel - to launch a grid of threads to perform 2D operation
+	dim3 threadsPerBlock(16, 16);
+	dim3 blocksPerGrid((width + threadsPerBlock.x - 1) / threadsPerBlock.x,
+		(height + threadsPerBlock.y - 1) / threadsPerBlock.y);
+    nested_branch_kernel<<<blocksPerGrid, threadsPerBlock>>>(in_d, out_d, width, height);
+	cudaStatus = checkCuda(cudaGetLastError(), "nested_branch_kernel launch");
+	if (cudaStatus != cudaSuccess) {
+		cudaFree(in_d);
+		cudaFree(out_d);
+		return cudaStatus;
+	}
+	cudaStatus = checkCuda(cudaDeviceSynchronize(), "cudaDeviceSynchronize nested_branch_kernel");
+	if (cudaStatus != cudaSuccess) {
+		cudaFree(in_d);
+		cudaFree(out_d);
+		return cudaStatus;
+	}
+	// Part 3: Copy from device memory to host memory
+    cudaStatus = checkCuda(cudaMemcpy(out, out_d, pixelCountRGB * sizeof(float), cudaMemcpyDeviceToHost), "cudaMemcpy D2H out");
+	if (cudaStatus != cudaSuccess) {
+		cudaFree(in_d);
+		cudaFree(out_d);
+		return cudaStatus;
+	}
+	// Part 4: Free device memory
+	cudaFree(in_d);
+	cudaFree(out_d);
+
+	return cudaSuccess;
+}
