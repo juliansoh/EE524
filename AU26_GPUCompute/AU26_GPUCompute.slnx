@@ -4,5 +4,6 @@
   </Configurations>
   <Project Path="Homework-1/Homework-1.vcxproj" />
   <Project Path="Homework-2/Homework-2.vcxproj" />
+  <Project Path="Homework-3-MMULT/Homework-3-MMULT.vcxproj" />
   <Project Path="Homework-3/Homework-3.vcxproj" />
 </Solution>
