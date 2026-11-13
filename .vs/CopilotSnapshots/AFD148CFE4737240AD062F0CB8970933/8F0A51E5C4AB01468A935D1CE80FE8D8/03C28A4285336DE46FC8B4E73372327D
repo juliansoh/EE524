@@ -1,0 +1,151 @@
+﻿/********************************
+* Author: Julian Soh
+* Date: Fall quarter 2026
+* EE P 524 - GPU Programming
+* Homework 3 - CUDA Kernels
+* *******************************/
+
+#include "device_launch_parameters.h"
+#include "cuda_runtime.h"
+#include <stdio.h>
+#include"Error-Checking.h"
+#include <cstdlib>
+#include <cmath>
+#include <new>
+
+// ==============================
+// Helper Functions
+// ==============================
+cudaError_t single_branch_run(float* in, float* out, int n);
+
+// ==============================
+// Kernel Declarations
+// ==============================
+__global__ void single_branch_kernel(const float* in, float* out, int n)
+{
+	// Compute Vector Analysis with Single Branching
+	// Each thread computes one element of the output vector.
+
+	// To create the thread diversion, we will use the 
+    // thread index to determine which element of the input vector to process. 
+    // Each thread will check if the corresponding input value is greater than 100.0f 
+    // and apply different operations based on that condition.
+
+    int i = threadIdx.x + blockDim.x * blockIdx.x;
+    if (i < n) {
+        if (in[i] > 100.0f) {
+            out[i] = in[i];
+        }
+        else {
+            out[i] = in[i] * 2.0f;
+        }
+    }
+}
+__global__ void nested_branch_kernel(const float* in, float* out, int n);
+
+// ==============================
+// Host Entry Point
+// ==============================
+int main()
+{
+    // TODO: Add host-side setup code.
+    // - Allocate and initialize host data.
+    // - Allocate device buffers.
+    // - Copy host data to device.
+    // - Launch kernel(s).
+    // - Copy results back to host.
+    // - Free all resources.
+
+    printf("[INFO] Homework-3 CUDA program started.\n");
+
+    // Randomly generate a very large input vector of floats. The size of the vector should be at least 1 million elements.
+    int n = 1000000;
+    float* in = new float[n];
+    float* out = new float[n];
+    for (int i = 0; i < n; ++i) {
+        in[i] = static_cast<float>(rand()) / RAND_MAX * 200.0f; // Random float between 0 and 200
+    }
+    printf("[INFO] Generated input vector with %d elements.\n", n);
+
+    // Run the single branch kernel
+    printf("[INFO] Launching single_branch_kernel...\n");
+	cudaError_t err = single_branch_run(in, out, n);
+    if (err != cudaSuccess) {
+        fprintf(stderr, "[ERROR] Kernel run failed: %s\n", cudaGetErrorString(err));
+    }
+    else {
+        printf("[INFO] Kernel run completed successfully.\n");
+    }
+
+    printf("[INFO] Sample output values:\n");
+    for (int i = 0; i < 8; ++i) {
+        printf("out[%d] = %.3f\n", i, out[i]);
+    }
+
+    // TODO: Optional CUDA cleanup before exit.
+    cudaDeviceReset();
+
+    printf("[INFO] Program finished.\n");
+
+    delete[] in;
+    delete[] out;
+
+    return 0;
+}
+
+// ==============================
+// Helper Function Implementations
+// ==============================
+
+cudaError_t single_branch_run(float* in, float* out, int n)
+{
+	float* in_d = nullptr;
+	float* out_d = nullptr;
+    cudaError_t cudaStatus = cudaSuccess;
+
+    // Part 1: Allocate device memory and copy from host memory to device memory
+    cudaStatus = checkCuda(cudaMalloc((void**)&in_d, n * sizeof(float)), "cudaMalloc in_d");
+    if (cudaStatus != cudaSuccess) return cudaStatus;
+    cudaStatus = checkCuda(cudaMalloc((void**)&out_d, n * sizeof(float)), "cudaMalloc out_d");
+    if (cudaStatus != cudaSuccess) {
+        cudaFree(in_d);
+        return cudaStatus;
+    }
+    cudaStatus = checkCuda(cudaMemcpy(in_d, in, n * sizeof(float), cudaMemcpyHostToDevice), "cudaMemcpy H2D in");
+    if (cudaStatus != cudaSuccess) {
+        cudaFree(in_d);
+        cudaFree(out_d);
+        return cudaStatus;
+    }
+
+    // Part 2: Call kernel - to launch a grid of threads to perform 2D operation
+	int threadsPerBlock = 256;
+	int blocksPerGrid = (n + threadsPerBlock - 1) / threadsPerBlock;
+	single_branch_kernel<<<blocksPerGrid, threadsPerBlock>>>(in_d, out_d, n);
+    cudaStatus = checkCuda(cudaGetLastError(), "single_branch_kernel launch");
+    if (cudaStatus != cudaSuccess) {
+        cudaFree(in_d);
+        cudaFree(out_d);
+        return cudaStatus;
+    }
+    cudaStatus = checkCuda(cudaDeviceSynchronize(), "cudaDeviceSynchronize single_branch_kernel");
+    if (cudaStatus != cudaSuccess) {
+        cudaFree(in_d);
+        cudaFree(out_d);
+        return cudaStatus;
+    }
+
+    // Part 3: Copy from device memory to host memory
+    cudaStatus = checkCuda(cudaMemcpy(out, out_d, n * sizeof(float), cudaMemcpyDeviceToHost), "cudaMemcpy D2H out");
+    if (cudaStatus != cudaSuccess) {
+        cudaFree(in_d);
+        cudaFree(out_d);
+        return cudaStatus;
+    }
+
+    // Part 4: Free device memory
+	cudaFree(in_d);
+	cudaFree(out_d);
+
+    return cudaSuccess;
+}

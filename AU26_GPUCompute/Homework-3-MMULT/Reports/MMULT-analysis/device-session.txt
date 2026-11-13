@@ -1,0 +1,43 @@
+Launch Settings
+--------------------- ------------------------------------------------------------------------------------------------------------------------
+Launch Attribute      Value                                                                                                                   
+--------------------- ------------------------------------------------------------------------------------------------------------------------
+Profiler Command Line "C:\Program Files\NVIDIA Corporation\Nsight Compute 2026.4.0\target\windows-desktop-win7-x64\ncu.exe" --config-file off 
+                      --export "C:/Users/juliansoh/Documents/NVIDIA Nsight Compute/MMULT-tiled-k2500-tile32--Profile" --force-overwrite --set 
+                      full E:/Dev/EE524/AU26_GPUCompute/x64/Release/Homework-3-MMULT.exe -tiled -k2500 -tile32                                
+
+Session Info
+---------------------- --------------------------------------------
+Session Attribute      Value                                       
+---------------------- --------------------------------------------
+Created                2026-Nov-06 13:48:09                        
+Host Name              jsCUDA                                      
+Host OS                Windows 11 (25H2) - 10.0.26200              
+Host Architecture      x64                                         
+Host Processor         AMD EPYC 7V12 64-Core Processor             
+Target Name            jsCUDA                                      
+Target IP Addresses    fe80::5b05:4bce:f618:ba9c, 172.16.0.4       
+Target OS              Windows 11 (25H2) - 10.0.26200              
+Target Architecture    x64                                         
+Target Processor       AMD EPYC 7V12 64-Core Processor             
+CUDA Version           13.1                                        
+Display Driver Version 591.59                                      
+PerfWorks              0.1.0                                       
+Nsight Compute Target  2026.4.0.0 (build 39012641) (public-release)
+
+Processes
+---------- -------------------------------------------------------------
+Process Id Process Name                                                 
+---------- -------------------------------------------------------------
+12644      E:\Dev\EE524\AU26_GPUCompute\x64\Release\Homework-3-MMULT.exe
+
+Device Attributes
+--------------------------- -----------
+Device Attribute            Device 0   
+--------------------------- -----------
+confidential_computing_mode No-CC      
+multiprocessor_count        40         
+display_name                Tesla T4   
+compute_capability_major    7          
+compute_capability_minor    5          
+total_memory                16998400000

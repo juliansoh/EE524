@@ -1,0 +1,4 @@
+﻿static cudaError_t checkCuda(decltype result, char* srcStr)
+{
+
+}#pragma once

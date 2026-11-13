@@ -1,0 +1,1053 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>MMULT Variants: Nsight Compute Analysis</title><style>@page { size: Letter; margin: 0.6in 0.55in; }
+body { font: 10pt/1.38 "Segoe UI", Arial, sans-serif; color: #172033; max-width: 100%; }
+h1 { font-size: 23pt; line-height: 1.15; margin-bottom: 14pt; }
+h2 { font-size: 15pt; margin-top: 21pt; padding-bottom: 4pt; border-bottom: 1px solid #b9c9d8; }
+h3 { font-size: 11.5pt; margin-top: 15pt; }
+h1,h2,h3 { break-after: avoid; }
+p { margin: 7pt 0; orphans: 3; widows: 3; }
+table { border-collapse: collapse; width: 100%; margin: 10pt 0 13pt; font-size: 8pt; line-height: 1.28; }
+th,td { border: 1px solid #b8c5d3; padding: 5px 6px; vertical-align: top; }
+th { background: #e8eef5; text-align: left; }
+thead { display: table-header-group; }
+tr { break-inside: avoid; }
+code { font: 8.5pt Consolas, monospace; overflow-wrap: anywhere; }
+pre { background: #f0f3f6; padding: 9px; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.25; }
+pre code { font-size: 8pt; }
+svg { width: 100%; height: auto; display: block; break-inside: avoid; }
+a { color: #2259b5; text-decoration: none; }
+ul { padding-left: 17pt; }
+li { margin: 4pt 0; }
+em { color: #405068; }
+@media print { h2 { break-inside: avoid; } }</style></head><body><h1 id="mmult-variants-nsight-compute-analysis">MMULT Variants: Nsight Compute Analysis</h1>
+<h2 id="findings-and-evidence-limits">1. Findings and evidence limits</h2>
+<p><strong>Best recorded execution times:</strong> tile16 with a <code>(16,16,1)</code> block for P = 100 x 100; tile32 with a <code>(32,32,1)</code> block for P = 1000 x 1000 and P = 2000 x 3000. For the largest case, tile32 takes <strong>30.251040 ms</strong>, a <strong>1.741x speedup</strong> over naive and a <strong>42.56% reduction in kernel time</strong>.</p>
+<p>All <strong>31 relevant <code>.ncu-repz</code> reports</strong> were opened using the installed Nsight Compute CLI: 16 original MMULT reports and 15 new <code>NoFFMA-MMULT</code> reports. Each contains one GPU kernel result. The original set includes three explicitly named naive runs, twelve tiled runs, and one additional naive run misleadingly named <code>MMULT-Serial-Profile.ncu-repz</code>; the new set repeats the three naive and twelve tiled configurations with FMA disabled. The mapping from k to matrix dimensions follows the assignment; the recorded launch grids are consistent with that mapping.</p>
+<p><strong>New FMA-disabled finding:</strong> for the selected largest-case tile32 configuration, duration changes from <strong>30.251040 to 30.413312 ms (+0.54%)</strong>, useful throughput falls <strong>0.53%</strong>, and measured AI changes only <strong>+0.08%</strong>. Occupancy remains approximately 100%. This is a small recorded slowdown, not a 2x penalty or a statistically established difference.</p>
+<table>
+<thead>
+<tr>
+<th>Assignment requirement</th>
+<th>What the supplied evidence establishes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CPU serial reference implementation and timing</td>
+<td>Not available. The file named Serial profiles <code>naive_mmult_kernel</code>, not CPU execution.</td>
+</tr>
+<tr>
+<td>Naive and generalized tiled GPU variants</td>
+<td>Both kernel families are present; tiled specializations 8, 12, 16, and 32 are recorded. Original CUDA source is not available in this folder, and the inspected tiled report has no source line information. Source-level correctness cannot be certified.</td>
+</tr>
+<tr>
+<td>All three matrix-size cases and four tile sizes</td>
+<td>Present for the GPU variants.</td>
+</tr>
+<tr>
+<td>Release configuration</td>
+<td>Recorded executable paths are under <code>x64\Release</code>. Compiler flags and the Visual Studio configuration itself are not established by that path alone.</td>
+</tr>
+<tr>
+<td>Verification and maximum elementwise error</td>
+<td>Not available: there are no output matrices or host verification logs in the supplied evidence.</td>
+</tr>
+<tr>
+<td>One combined Roofline plot</td>
+<td>Reconstructed below from the recorded metrics, including all 31 GPU results. This is not a screenshot or a saved native Nsight baseline set.</td>
+</tr>
+<tr>
+<td>FMA-disabled rebuild and comparison</td>
+<td>All 15 NoFFMA reports have zero FFMA and nonzero FADD/FMUL activity. The selected run's SASS confirms separate FMUL/FADD instructions. The exact compiler command is not embedded in these profiles.</td>
+</tr>
+<tr>
+<td>Transposed-input experiment</td>
+<td>Not supplied; the layout/coalescing tradeoff and break-even condition are discussed in Section 7, without claiming measured transpose timings.</td>
+</tr>
+</tbody>
+</table>
+<p>This is a written analysis of existing measurements, not a claim that the original application was modified, rebuilt, verified, or reprofiled. Original profile files were left unchanged.</p>
+<h2 id="device-measurement-definitions-and-combined-roofline">2. Device, measurement definitions, and combined Roofline</h2>
+<p>The reports identify an <strong>NVIDIA Tesla T4</strong>, compute capability <strong>7.5</strong>, with <strong>40 SMs</strong>, <strong>16 GB device memory</strong>, and <strong>4 MiB L2 cache</strong>. Recorded limits are 1024 threads/block, 1024 resident threads/SM, 32 resident warps/SM, 16 resident blocks/SM, 65,536 32-bit registers/SM, and up to 64 KiB shared memory/SM. The tile32 run uses a 32 KiB shared-memory configuration, of which each block statically allocates 8 KiB.</p>
+<p>The following quantities must not be conflated:</p>
+<ul>
+<li><strong>Hardware arithmetic intensity (HW AI):</strong> FP32 hardware FLOP/s divided by measured DRAM bytes/s. The numerator follows Nsight's Roofline expression: <code>(FADD + FMUL + 2*FFMA per cycle) * SMSP clock</code>. One FFMA counts as <strong>two FLOPs</strong>.</li>
+<li><strong>Hardware throughput (HW GFLOP/s):</strong> the same hardware-operation rate, including arithmetic on padded tile positions.</li>
+<li><strong>Useful throughput:</strong> <code>2*j*k*l / kernel_duration</code>, using the conventional matrix-multiplication operation count. This is better for comparing time to solve the same problem.</li>
+<li><strong>SM %:</strong> Nsight's <code>Compute (SM) Throughput</code>, an aggregate hardware-resource utilization metric. It is <strong>not</strong> FP32 FLOP/s divided by FP32 peak.</li>
+<li><strong>Occupancy:</strong> the reported achieved active-warps percentage. Values slightly above 100% are retained as recorded; they are measurement/aggregation effects, not capacity beyond the device limit.</li>
+</ul>
+<p>Durations are GPU <strong>kernel durations</strong>, not CPU serial time, transfer time, full application time, or profiler wall-clock time. Each configuration has one recorded launch, so these are recorded rankings, not statistically established averages.</p>
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="780" viewBox="0 0 1100 780" role="img" aria-labelledby="title desc">
+<title id="title">Combined MMULT FP32 Roofline, Tesla T4</title><desc id="desc">All 31 report results, including 15 FMA-disabled runs. Logarithmic arithmetic intensity and hardware performance axes. One common FMA-capable reference roof uses the original largest tile32 run. IDs correspond to the report tables.</desc>
+<rect width="1100" height="780" fill="white"/><g font-family="Arial,sans-serif" fill="#172033">
+<text x="90" y="32" font-size="24" font-weight="bold">MMULT: all recorded GPU results</text>
+<text x="90" y="57" font-size="15">Tesla T4 | FP32 FLOPs include padded work | DRAM traffic denominator</text>
+<line x1="90" y1="90" x2="90" y2="565" stroke="#e0e5ec"/><text x="90" y="590" text-anchor="middle" font-size="15">1</text>
+<line x1="192.35" y1="90" x2="192.35" y2="565" stroke="#e0e5ec"/><text x="192.35" y="590" text-anchor="middle" font-size="15">2</text>
+<line x1="327.65" y1="90" x2="327.65" y2="565" stroke="#e0e5ec"/><text x="327.65" y="590" text-anchor="middle" font-size="15">5</text>
+<line x1="430" y1="90" x2="430" y2="565" stroke="#e0e5ec"/><text x="430" y="590" text-anchor="middle" font-size="15">10</text>
+<line x1="532.35" y1="90" x2="532.35" y2="565" stroke="#e0e5ec"/><text x="532.35" y="590" text-anchor="middle" font-size="15">20</text>
+<line x1="667.65" y1="90" x2="667.65" y2="565" stroke="#e0e5ec"/><text x="667.65" y="590" text-anchor="middle" font-size="15">50</text>
+<line x1="770" y1="90" x2="770" y2="565" stroke="#e0e5ec"/><text x="770" y="590" text-anchor="middle" font-size="15">100</text>
+<line x1="90" y1="565" x2="770" y2="565" stroke="#e0e5ec"/><text x="77" y="570" text-anchor="end" font-size="15">100</text>
+<line x1="90" y1="493.505" x2="770" y2="493.505" stroke="#e0e5ec"/><text x="77" y="498.505" text-anchor="end" font-size="15">200</text>
+<line x1="90" y1="398.995" x2="770" y2="398.995" stroke="#e0e5ec"/><text x="77" y="403.995" text-anchor="end" font-size="15">500</text>
+<line x1="90" y1="327.5" x2="770" y2="327.5" stroke="#e0e5ec"/><text x="77" y="332.5" text-anchor="end" font-size="15">1000</text>
+<line x1="90" y1="256.005" x2="770" y2="256.005" stroke="#e0e5ec"/><text x="77" y="261.005" text-anchor="end" font-size="15">2000</text>
+<line x1="90" y1="161.495" x2="770" y2="161.495" stroke="#e0e5ec"/><text x="77" y="166.495" text-anchor="end" font-size="15">5000</text>
+<line x1="90" y1="90" x2="770" y2="90" stroke="#e0e5ec"/><text x="77" y="95" text-anchor="end" font-size="15">10000</text>
+<polyline points="90,447.216 565.023,115.398 770,115.398" fill="none" stroke="#172033" stroke-width="3"/>
+<line x1="565.023" y1="90" x2="565.023" y2="565" stroke="#64748b" stroke-dasharray="6 5"/>
+<text x="480" y="104" font-size="14">FP32 reference: 7817 GFLOP/s</text>
+<text x="130" y="255" font-size="14" transform="rotate(-32 130 255)">DRAM reference: 313.28 GB/s</text>
+<text x="573.023" y="548" font-size="13">ridge 24.953</text>
+<g><title>01 naive, k=100, FMA=enabled, AI=23.012, GFLOP/s=267.091</title>
+<circle cx="553.062" cy="463.668" r="6" fill="#444444" stroke="white" stroke-width="1.5"/>
+<text x="526.062" y="483.668" font-size="12" font-weight="bold">01/16</text>
+</g>
+<text x="805" y="96" font-size="12" fill="#444444">01 100x100 : naive</text>
+<g><title>02 tile8, k=100, FMA=enabled, AI=26.273, GFLOP/s=288.136</title>
+<circle cx="572.631" cy="455.846" r="6" fill="#c23d32" stroke="white" stroke-width="1.5"/>
+<text x="574.631" y="477.846" font-size="12" font-weight="bold">02</text>
+</g>
+<text x="805" y="114" font-size="12" fill="#c23d32">02 100x100 : tile8</text>
+<g><title>03 tile12, k=100, FMA=enabled, AI=29.868, GFLOP/s=340.832</title>
+<circle cx="591.57" cy="438.522" r="6" fill="#986200" stroke="white" stroke-width="1.5"/>
+<text x="577.57" y="424.522" font-size="12" font-weight="bold">03</text>
+</g>
+<text x="805" y="132" font-size="12" fill="#986200">03 100x100 : tile12</text>
+<g><title>04 tile16, k=100, FMA=enabled, AI=33.311, GFLOP/s=402.785</title>
+<circle cx="607.679" cy="421.295" r="6" fill="#007f70" stroke="white" stroke-width="1.5"/>
+<text x="601.679" y="406.295" font-size="12" font-weight="bold">04</text>
+</g>
+<text x="805" y="150" font-size="12" fill="#007f70">04 100x100 : tile16</text>
+<g><title>05 tile32, k=100, FMA=enabled, AI=49.35, GFLOP/s=387.789</title>
+<circle cx="665.717" cy="425.209" r="6" fill="#2259b5" stroke="white" stroke-width="1.5"/>
+<text x="677.717" y="431.209" font-size="12" font-weight="bold">05</text>
+</g>
+<text x="805" y="168" font-size="12" fill="#2259b5">05 100x100 : tile32</text>
+<g><title>06 naive, k=1000, FMA=enabled, AI=38.986, GFLOP/s=742.612</title>
+<polygon points="630.908,351.194 623.908,364.194 637.908,364.194" fill="#444444" stroke="white" stroke-width="1.5"/>
+<text x="606.908" y="375.194" font-size="12" font-weight="bold">06</text>
+</g>
+<text x="805" y="186" font-size="12" fill="#444444">06 1000x1000 : naive</text>
+<g><title>07 tile8, k=1000, FMA=enabled, AI=47.956, GFLOP/s=733.618</title>
+<polygon points="661.486,352.451 654.486,365.451 668.486,365.451" fill="#c23d32" stroke="white" stroke-width="1.5"/>
+<text x="673.486" y="369.451" font-size="12" font-weight="bold">07</text>
+</g>
+<text x="805" y="204" font-size="12" fill="#c23d32">07 1000x1000 : tile8</text>
+<g><title>08 tile12, k=1000, FMA=enabled, AI=38.623, GFLOP/s=794.447</title>
+<polygon points="629.528,344.235 622.528,357.235 636.528,357.235" fill="#986200" stroke="white" stroke-width="1.5"/>
+<text x="608.528" y="337.235" font-size="12" font-weight="bold">08</text>
+</g>
+<text x="805" y="222" font-size="12" fill="#986200">08 1000x1000 : tile12</text>
+<g><title>09 tile16, k=1000, FMA=enabled, AI=45.307, GFLOP/s=982.403</title>
+<polygon points="653.096,322.331 646.096,335.331 660.096,335.331" fill="#007f70" stroke="white" stroke-width="1.5"/>
+<text x="663.096" y="316.331" font-size="12" font-weight="bold">09</text>
+</g>
+<text x="805" y="240" font-size="12" fill="#007f70">09 1000x1000 : tile16</text>
+<g><title>10 tile32, k=1000, FMA=enabled, AI=28.146, GFLOP/s=1036.103</title>
+<polygon points="582.8,316.842 575.8,329.842 589.8,329.842" fill="#2259b5" stroke="white" stroke-width="1.5"/>
+<text x="557.8" y="309.842" font-size="12" font-weight="bold">10</text>
+</g>
+<text x="805" y="258" font-size="12" fill="#2259b5">10 1000x1000 : tile32</text>
+<g><title>11 naive, k=2500, FMA=enabled, AI=7.872, GFLOP/s=569.673</title>
+<rect x="388.667" y="379.539" width="12" height="12" fill="#444444" stroke="white" stroke-width="1.5"/>
+<text x="367.667" y="400.539" font-size="12" font-weight="bold">11</text>
+</g>
+<text x="805" y="276" font-size="12" fill="#444444">11 2000x3000 : naive</text>
+<g><title>12 tile8, k=2500, FMA=enabled, AI=3.98, GFLOP/s=494.009</title>
+<rect x="287.972" y="394.238" width="12" height="12" fill="#c23d32" stroke="white" stroke-width="1.5"/>
+<text x="271.972" y="420.238" font-size="12" font-weight="bold">12</text>
+</g>
+<text x="805" y="294" font-size="12" fill="#c23d32">12 2000x3000 : tile8</text>
+<g><title>13 tile12, k=2500, FMA=enabled, AI=5.958, GFLOP/s=683.383</title>
+<rect x="347.533" y="360.767" width="12" height="12" fill="#986200" stroke="white" stroke-width="1.5"/>
+<text x="330.533" y="352.767" font-size="12" font-weight="bold">13</text>
+</g>
+<text x="805" y="312" font-size="12" fill="#986200">13 2000x3000 : tile12</text>
+<g><title>14 tile16, k=2500, FMA=enabled, AI=7.93, GFLOP/s=909.827</title>
+<rect x="389.75" y="331.247" width="12" height="12" fill="#007f70" stroke="white" stroke-width="1.5"/>
+<text x="369.75" y="324.247" font-size="12" font-weight="bold">14</text>
+</g>
+<text x="805" y="330" font-size="12" fill="#007f70">14 2000x3000 : tile16</text>
+<g><title>15 tile32, k=2500, FMA=enabled, AI=15.382, GFLOP/s=1013.522</title>
+<rect x="487.582" y="320.115" width="12" height="12" fill="#2259b5" stroke="white" stroke-width="1.5"/>
+<text x="469.582" y="311.115" font-size="12" font-weight="bold">15</text>
+</g>
+<text x="805" y="348" font-size="12" fill="#2259b5">15 2000x3000 : tile32</text>
+<g><title>16 serial-label-naive, k=100, FMA=enabled, AI=23.011, GFLOP/s=269.393</title>
+<circle cx="553.061" cy="462.783" r="10" fill="none" stroke="#444444" stroke-width="1.5"/>
+</g>
+<text x="805" y="366" font-size="12" fill="#444444">16 100x100 : Serial file / naive</text>
+<g><title>17 naive, k=100, FMA=disabled, AI=22.878, GFLOP/s=263.721</title>
+<circle cx="552.2" cy="464.978" r="9" fill="none" stroke="#444444" stroke-width="1.5"/>
+<text x="561.2" y="491.978" font-size="12" font-weight="bold">17</text>
+</g>
+<text x="805" y="384" font-size="12" fill="#444444">17 100x100 : naive NoFMA</text>
+<g><title>18 tile8, k=100, FMA=disabled, AI=25.622, GFLOP/s=289.33</title>
+<circle cx="568.929" cy="455.419" r="9" fill="none" stroke="#c23d32" stroke-width="1.5"/>
+<text x="577.929" y="482.419" font-size="12" font-weight="bold">18</text>
+</g>
+<text x="805" y="402" font-size="12" fill="#c23d32">18 100x100 : tile8 NoFMA</text>
+<g><title>19 tile12, k=100, FMA=disabled, AI=29.776, GFLOP/s=340.816</title>
+<circle cx="591.116" cy="438.527" r="9" fill="none" stroke="#986200" stroke-width="1.5"/>
+<text x="600.116" y="465.527" font-size="12" font-weight="bold">19</text>
+</g>
+<text x="805" y="420" font-size="12" fill="#986200">19 100x100 : tile12 NoFMA</text>
+<g><title>20 tile16, k=100, FMA=disabled, AI=32.424, GFLOP/s=399.112</title>
+<circle cx="603.695" cy="422.24" r="9" fill="none" stroke="#007f70" stroke-width="1.5"/>
+<text x="612.695" y="449.24" font-size="12" font-weight="bold">20</text>
+</g>
+<text x="805" y="438" font-size="12" fill="#007f70">20 100x100 : tile16 NoFMA</text>
+<g><title>21 tile32, k=100, FMA=disabled, AI=49.053, GFLOP/s=371.304</title>
+<circle cx="664.827" cy="429.689" r="9" fill="none" stroke="#2259b5" stroke-width="1.5"/>
+<text x="673.827" y="456.689" font-size="12" font-weight="bold">21</text>
+</g>
+<text x="805" y="456" font-size="12" fill="#2259b5">21 100x100 : tile32 NoFMA</text>
+<g><title>22 naive, k=1000, FMA=disabled, AI=38.33, GFLOP/s=754.558</title>
+<polygon points="628.402,346.548 618.402,365.548 638.402,365.548" fill="none" stroke="#444444" stroke-width="1.5"/>
+<text x="637.402" y="383.548" font-size="12" font-weight="bold">22</text>
+</g>
+<text x="805" y="474" font-size="12" fill="#444444">22 1000x1000 : naive NoFMA</text>
+<g><title>23 tile8, k=1000, FMA=disabled, AI=50.433, GFLOP/s=734.681</title>
+<polygon points="668.923,349.302 658.923,368.302 678.923,368.302" fill="none" stroke="#c23d32" stroke-width="1.5"/>
+<text x="677.923" y="386.302" font-size="12" font-weight="bold">23</text>
+</g>
+<text x="805" y="492" font-size="12" fill="#c23d32">23 1000x1000 : tile8 NoFMA</text>
+<g><title>24 tile12, k=1000, FMA=disabled, AI=38.079, GFLOP/s=791.797</title>
+<polygon points="627.434,341.579 617.434,360.579 637.434,360.579" fill="none" stroke="#986200" stroke-width="1.5"/>
+<text x="636.434" y="378.579" font-size="12" font-weight="bold">24</text>
+</g>
+<text x="805" y="510" font-size="12" fill="#986200">24 1000x1000 : tile12 NoFMA</text>
+<g><title>25 tile16, k=1000, FMA=disabled, AI=45.044, GFLOP/s=979.236</title>
+<polygon points="652.236,319.664 642.236,338.664 662.236,338.664" fill="none" stroke="#007f70" stroke-width="1.5"/>
+<text x="661.236" y="356.664" font-size="12" font-weight="bold">25</text>
+</g>
+<text x="805" y="528" font-size="12" fill="#007f70">25 1000x1000 : tile16 NoFMA</text>
+<g><title>26 tile32, k=1000, FMA=disabled, AI=28.101, GFLOP/s=1017.151</title>
+<polygon points="582.566,315.746 572.566,334.746 592.566,334.746" fill="none" stroke="#2259b5" stroke-width="1.5"/>
+<text x="591.566" y="352.746" font-size="12" font-weight="bold">26</text>
+</g>
+<text x="805" y="546" font-size="12" fill="#2259b5">26 1000x1000 : tile32 NoFMA</text>
+<g><title>27 naive, k=2500, FMA=disabled, AI=7.872, GFLOP/s=546.001</title>
+<rect x="385.676" y="380.917" width="18" height="18" fill="none" stroke="#444444" stroke-width="1.5"/>
+<text x="403.676" y="416.917" font-size="12" font-weight="bold">27</text>
+</g>
+<text x="805" y="564" font-size="12" fill="#444444">27 2000x3000 : naive NoFMA</text>
+<g><title>28 tile8, k=2500, FMA=disabled, AI=3.98, GFLOP/s=494.537</title>
+<rect x="284.956" y="391.128" width="18" height="18" fill="none" stroke="#c23d32" stroke-width="1.5"/>
+<text x="302.956" y="427.128" font-size="12" font-weight="bold">28</text>
+</g>
+<text x="805" y="582" font-size="12" fill="#c23d32">28 2000x3000 : tile8 NoFMA</text>
+<g><title>29 tile12, k=2500, FMA=disabled, AI=5.959, GFLOP/s=673.842</title>
+<rect x="344.564" y="359.218" width="18" height="18" fill="none" stroke="#986200" stroke-width="1.5"/>
+<text x="362.564" y="395.218" font-size="12" font-weight="bold">29</text>
+</g>
+<text x="805" y="600" font-size="12" fill="#986200">29 2000x3000 : tile12 NoFMA</text>
+<g><title>30 tile16, k=2500, FMA=disabled, AI=7.935, GFLOP/s=887.149</title>
+<rect x="386.838" y="330.851" width="18" height="18" fill="none" stroke="#007f70" stroke-width="1.5"/>
+<text x="404.838" y="366.851" font-size="12" font-weight="bold">30</text>
+</g>
+<text x="805" y="618" font-size="12" fill="#007f70">30 2000x3000 : tile16 NoFMA</text>
+<g><title>31 tile32, k=2500, FMA=disabled, AI=15.394, GFLOP/s=1008.125</title>
+<rect x="484.7" y="317.665" width="18" height="18" fill="none" stroke="#2259b5" stroke-width="1.5"/>
+<text x="502.7" y="353.665" font-size="12" font-weight="bold">31</text>
+</g>
+<text x="805" y="636" font-size="12" fill="#2259b5">31 2000x3000 : tile32 NoFMA</text>
+<path d="M90 90V565H770" fill="none" stroke="#172033" stroke-width="2"/>
+<text x="430" y="624" text-anchor="middle" font-size="18">Hardware arithmetic intensity (FLOP/byte), log scale</text>
+<text x="24" y="330" text-anchor="middle" font-size="18" transform="rotate(-90 24 330)">Hardware performance (GFLOP/s), log scale</text>
+<text x="805" y="674" font-size="13">Circle / triangle / square:</text><text x="805" y="694" font-size="13">k=100 / 1000 / 2500</text>
+<text x="90" y="664" font-size="14">Filled: FMA enabled. Hollow: FMA disabled. Nearly coincident points retain separate IDs.</text>
+<text x="90" y="690" font-size="14">Common roof is FMA-capable FP32 peak, not an instruction-mix-adjusted NoFMA ceiling.</text>
+<text x="90" y="750" font-size="13">All 31 points lie below the reference roof. The Serial-labeled report is another GPU naive run, not CPU timing.</text>
+</g></svg>
+
+<p><em>Figure 1. Reconstructed combined FP32 DRAM Roofline. IDs 01-16 are the original FMA-enabled results; IDs 17-31 are NoFFMA results tabulated in Section 6. Color denotes variant, shape denotes matrix-size case, and hollow markers denote NoFFMA. Many paired points nearly coincide. The common FMA-capable reference roof uses the original largest-case tile32 run: 7817.35 GFLOP/s peak, 313.28 GB/s peak DRAM bandwidth, and ridge AI = 24.953 FLOP/byte. Other runs have different clocks; original-run classification below uses each run's own roof. The NoFFMA instruction-mix ceiling is discussed separately in Section 6.</em></p>
+<p>The reconstruction uses the installed <code>SpeedOfLight_RooflineChart.section</code> formulas, rather than assuming AI from tile width. Exported metric values are rounded, so reconstructed rates and AI are approximate. Support files, including all raw/detail metric exports and <code>summary.csv</code>, are in <code>MMULT-analysis</code>.</p>
+<h3 id="measurements-p-100-x-100-m-100-x-100-n-100-x-100">Measurements: P = 100 x 100, M = 100 x 100, N = 100 x 100</h3>
+<table>
+<thead>
+<tr>
+<th>ID / variant</th>
+<th>Block</th>
+<th style="text-align: right;">Duration ms</th>
+<th style="text-align: right;">HW AI FLOP/B</th>
+<th style="text-align: right;">HW GFLOP/s</th>
+<th style="text-align: right;">Useful GFLOP/s</th>
+<th style="text-align: right;">SM %</th>
+<th style="text-align: right;">Occ. %</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>01 naive</td>
+<td>16 x 16</td>
+<td style="text-align: right;">0.007488</td>
+<td style="text-align: right;">23.012</td>
+<td style="text-align: right;">267.09</td>
+<td style="text-align: right;">267.09</td>
+<td style="text-align: right;">30.54</td>
+<td style="text-align: right;">27.25</td>
+</tr>
+<tr>
+<td>02 tile8</td>
+<td>8 x 8</td>
+<td style="text-align: right;">0.007808</td>
+<td style="text-align: right;">26.273</td>
+<td style="text-align: right;">288.14</td>
+<td style="text-align: right;">256.15</td>
+<td style="text-align: right;">25.69</td>
+<td style="text-align: right;">25.39</td>
+</tr>
+<tr>
+<td>03 tile12</td>
+<td>12 x 12</td>
+<td style="text-align: right;">0.007392</td>
+<td style="text-align: right;">29.868</td>
+<td style="text-align: right;">340.83</td>
+<td style="text-align: right;">270.56</td>
+<td style="text-align: right;">31.41</td>
+<td style="text-align: right;">31.30</td>
+</tr>
+<tr>
+<td>04 tile16</td>
+<td>16 x 16</td>
+<td style="text-align: right;"><strong>0.006976</strong></td>
+<td style="text-align: right;">33.311</td>
+<td style="text-align: right;"><strong>402.79</strong></td>
+<td style="text-align: right;"><strong>286.70</strong></td>
+<td style="text-align: right;">30.73</td>
+<td style="text-align: right;">30.54</td>
+</tr>
+<tr>
+<td>05 tile32</td>
+<td>32 x 32</td>
+<td style="text-align: right;">0.010816</td>
+<td style="text-align: right;"><strong>49.350</strong></td>
+<td style="text-align: right;">387.79</td>
+<td style="text-align: right;">184.91</td>
+<td style="text-align: right;">27.10</td>
+<td style="text-align: right;"><strong>99.20</strong></td>
+</tr>
+<tr>
+<td>16 Serial label: actually naive</td>
+<td>16 x 16</td>
+<td style="text-align: right;">0.007424</td>
+<td style="text-align: right;">23.011</td>
+<td style="text-align: right;">269.39</td>
+<td style="text-align: right;">269.40</td>
+<td style="text-align: right;">30.48</td>
+<td style="text-align: right;">27.15</td>
+</tr>
+</tbody>
+</table>
+<h3 id="measurements-p-1000-x-1000-m-1000-x-1000-n-1000-x-1000">Measurements: P = 1000 x 1000, M = 1000 x 1000, N = 1000 x 1000</h3>
+<table>
+<thead>
+<tr>
+<th>ID / variant</th>
+<th>Block</th>
+<th style="text-align: right;">Duration ms</th>
+<th style="text-align: right;">HW AI FLOP/B</th>
+<th style="text-align: right;">HW GFLOP/s</th>
+<th style="text-align: right;">Useful GFLOP/s</th>
+<th style="text-align: right;">SM %</th>
+<th style="text-align: right;">Occ. %</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>06 naive</td>
+<td>16 x 16</td>
+<td style="text-align: right;">2.693184</td>
+<td style="text-align: right;">38.986</td>
+<td style="text-align: right;">742.61</td>
+<td style="text-align: right;">742.62</td>
+<td style="text-align: right;"><strong>74.86</strong></td>
+<td style="text-align: right;">98.16</td>
+</tr>
+<tr>
+<td>07 tile8</td>
+<td>8 x 8</td>
+<td style="text-align: right;">2.726208</td>
+<td style="text-align: right;"><strong>47.956</strong></td>
+<td style="text-align: right;">733.62</td>
+<td style="text-align: right;">733.62</td>
+<td style="text-align: right;">64.17</td>
+<td style="text-align: right;">98.53</td>
+</tr>
+<tr>
+<td>08 tile12</td>
+<td>12 x 12</td>
+<td style="text-align: right;">2.578368</td>
+<td style="text-align: right;">38.623</td>
+<td style="text-align: right;">794.45</td>
+<td style="text-align: right;">775.68</td>
+<td style="text-align: right;">69.89</td>
+<td style="text-align: right;">92.75</td>
+</tr>
+<tr>
+<td>09 tile16</td>
+<td>16 x 16</td>
+<td style="text-align: right;">2.085088</td>
+<td style="text-align: right;">45.307</td>
+<td style="text-align: right;">982.40</td>
+<td style="text-align: right;">959.19</td>
+<td style="text-align: right;">73.68</td>
+<td style="text-align: right;">98.70</td>
+</tr>
+<tr>
+<td>10 tile32</td>
+<td>32 x 32</td>
+<td style="text-align: right;"><strong>2.072640</strong></td>
+<td style="text-align: right;">28.146</td>
+<td style="text-align: right;"><strong>1036.10</strong></td>
+<td style="text-align: right;"><strong>964.95</strong></td>
+<td style="text-align: right;">71.08</td>
+<td style="text-align: right;"><strong>99.85</strong></td>
+</tr>
+</tbody>
+</table>
+<h3 id="measurements-p-2000-x-3000-m-2000-x-2500-n-2500-x-3000">Measurements: P = 2000 x 3000, M = 2000 x 2500, N = 2500 x 3000</h3>
+<table>
+<thead>
+<tr>
+<th>ID / variant</th>
+<th>Block</th>
+<th style="text-align: right;">Duration ms</th>
+<th style="text-align: right;">HW AI FLOP/B</th>
+<th style="text-align: right;">HW GFLOP/s</th>
+<th style="text-align: right;">Useful GFLOP/s</th>
+<th style="text-align: right;">SM %</th>
+<th style="text-align: right;">Occ. %</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>11 naive</td>
+<td>16 x 16</td>
+<td style="text-align: right;">52.661344</td>
+<td style="text-align: right;">7.872</td>
+<td style="text-align: right;">569.67</td>
+<td style="text-align: right;">569.68</td>
+<td style="text-align: right;">64.50</td>
+<td style="text-align: right;">99.03</td>
+</tr>
+<tr>
+<td>12 tile8</td>
+<td>8 x 8</td>
+<td style="text-align: right;">60.824480</td>
+<td style="text-align: right;">3.980</td>
+<td style="text-align: right;">494.01</td>
+<td style="text-align: right;">493.22</td>
+<td style="text-align: right;">52.91</td>
+<td style="text-align: right;"><strong>100.55</strong></td>
+</tr>
+<tr>
+<td>13 tile12</td>
+<td>12 x 12</td>
+<td style="text-align: right;">44.127712</td>
+<td style="text-align: right;">5.958</td>
+<td style="text-align: right;">683.38</td>
+<td style="text-align: right;">679.84</td>
+<td style="text-align: right;">67.83</td>
+<td style="text-align: right;">93.50</td>
+</tr>
+<tr>
+<td>14 tile16</td>
+<td>16 x 16</td>
+<td style="text-align: right;">33.219776</td>
+<td style="text-align: right;">7.930</td>
+<td style="text-align: right;">909.83</td>
+<td style="text-align: right;">903.08</td>
+<td style="text-align: right;">71.33</td>
+<td style="text-align: right;">99.75</td>
+</tr>
+<tr>
+<td>15 tile32</td>
+<td>32 x 32</td>
+<td style="text-align: right;"><strong>30.251040</strong></td>
+<td style="text-align: right;"><strong>15.382</strong></td>
+<td style="text-align: right;"><strong>1013.52</strong></td>
+<td style="text-align: right;"><strong>991.70</strong></td>
+<td style="text-align: right;"><strong>71.37</strong></td>
+<td style="text-align: right;">100.13</td>
+</tr>
+</tbody>
+</table>
+<h2 id="which-configurations-perform-best">3. Which configurations perform best?</h2>
+<p>The tables in Sections 2-3 describe the <strong>original FMA-enabled sweep</strong>. The complete NoFFMA sweep and its changed rankings are in Section 6.</p>
+<table>
+<thead>
+<tr>
+<th>Criterion</th>
+<th>100 x 100, k=100</th>
+<th>1000 x 1000, k=1000</th>
+<th>2000 x 3000, k=2500</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Highest measured HW AI</td>
+<td>tile32: 49.350</td>
+<td>tile8: 47.956</td>
+<td>tile32: 15.382</td>
+</tr>
+<tr>
+<td>Highest FP32 hardware throughput</td>
+<td>tile16: 402.79 GFLOP/s</td>
+<td>tile32: 1036.10 GFLOP/s</td>
+<td>tile32: 1013.52 GFLOP/s</td>
+</tr>
+<tr>
+<td>Highest useful throughput / shortest duration</td>
+<td>tile16: 6.976 us</td>
+<td>tile32: 2.072640 ms</td>
+<td>tile32: 30.251040 ms</td>
+</tr>
+<tr>
+<td>Highest achieved occupancy</td>
+<td>tile32: 99.20%</td>
+<td>tile32: 99.85%</td>
+<td>tile8: 100.55% reported; tile32 is also approximately full</td>
+</tr>
+<tr>
+<td>Highest Compute (SM) Throughput</td>
+<td>tile12: 31.41%</td>
+<td>naive: 74.86%</td>
+<td>tile32: 71.37%</td>
+</tr>
+<tr>
+<td>Fastest speedup over naive</td>
+<td>1.073x</td>
+<td>1.299x</td>
+<td>1.741x</td>
+</tr>
+</tbody>
+</table>
+<p>The winners depend on what &quot;compute throughput&quot; means: the FP32 FLOP/s winner is not necessarily the aggregate SM-% winner. Highest occupancy and highest AI are also not sufficient to select the fastest kernel.</p>
+<h3 id="are-any-configurations-compute-bound">Are any configurations compute-bound?</h3>
+<p><strong>In the geometric DRAM-Roofline sense, yes:</strong> all four tiled k=100 results are to the right of their FP32 ridge points, and all five k=1000 results, including naive, are to the right. Their relevant ridges are approximately 24.2-25.4 FLOP/byte. The k=100 naive runs are to the left, and <strong>every k=2500 configuration is to the left</strong> of its own ridge, whose value ranges from about 20.4 to 25.0.</p>
+<p>However, <strong>being on the compute-ceiling side does not demonstrate that FP32 execution is the actual saturated bottleneck</strong>. These runs achieve only about <strong>3.3-13.0% of their recorded FP32 peaks</strong>, well below the roof. Small grids, instruction issue, cache/shared-memory pipelines, and synchronization can limit performance before either idealized roof is reached. Nsight explicitly diagnoses the small case as grid-underfilled and several larger runs as compute/memory balanced. Likewise, being left of the ridge does not prove that DRAM bandwidth is saturated.</p>
+<h3 id="why-do-the-results-change-with-problem-size">Why do the results change with problem size?</h3>
+<p><strong>Small case:</strong> the grids occupy less than one full device wave. Tile32 has only <strong>16 blocks for 40 SMs</strong>, while tile16 has 49 blocks. Tile32's nearly 100% occupancy describes resident warps while SMs are active; it does not mean all 40 SMs are kept busy. Its padded work is also substantial: 128 x 128 output positions across 128 reduction positions give approximately <strong>2.10x the useful FLOP count</strong>, compared with about 1.40x for tile16. Thus tile32 has the highest HW AI but is the slowest small-case variant. Tile16's lead over naive is only 0.512 us; repeated timings would be needed to establish robustness.</p>
+<p><strong>Medium case:</strong> there are enough blocks to sustain high occupancy. Tile32 is fastest, but only <strong>0.60% faster than tile16</strong> in the recorded run, so a clear general advantage is not established by one sample. Tile8 has the highest HW AI largely because it incurs only <strong>41.71 MB</strong> of measured DRAM traffic versus <strong>76.30 MB</strong> for tile32, yet tile8 takes longer. Its shorter phases require more synchronization/loading phases, and Nsight reports MIO-pipeline stalls. AI measures DRAM reuse, not all on-chip traffic or instruction costs.</p>
+<p><strong>Largest case:</strong> the nominal input footprint is <strong>50 MB</strong> and the output is <strong>24 MB</strong>, far beyond the 4 MiB L2. Reuse and traffic differ strongly across launches. Tile8 transfers <strong>7.549 GB</strong>, naive <strong>3.811 GB</strong>, and tile32 <strong>1.993 GB</strong> across DRAM. Tile32 reduces measured DRAM traffic by <strong>47.70% versus naive</strong>, supports high occupancy, and amortizes tile-loading/synchronization overhead across more multiply-adds. It is <strong>8.94% faster than tile16</strong> and the clear recorded winner. Nevertheless, its DRAM throughput is only <strong>21.03% of peak</strong> and its FP32 throughput about <strong>12.97% of peak</strong>; it is not simply saturating external memory or FP32 units.</p>
+<p>The largest tile32 run reports <strong>23.6 cycles/warp of MIO-throttle stalls</strong>, about <strong>60.3%</strong> of average cycles between instruction issues, and only <strong>0.97 eligible warps per scheduler per cycle</strong> despite roughly eight active warps. Its recorded shared-memory bank-conflict counters are zero, so bank conflicts should not be asserted as the cause of those stalls.</p>
+<p>Recorded clocks also vary: for example, the largest tile8 and tile32 runs have approximately <strong>1.277 GHz</strong> and <strong>1.527 GHz</strong> SM clocks. Rankings describe these runs, not an experiment with identical controlled clocks or repeated confidence intervals.</p>
+<h3 id="thread-block-and-resource-implications">Thread-block and resource implications</h3>
+<table>
+<thead>
+<tr>
+<th>Variant</th>
+<th style="text-align: right;">Threads/block</th>
+<th style="text-align: right;">Registers/thread</th>
+<th style="text-align: right;">Static shared/block</th>
+<th style="text-align: right;">Theoretical occupancy</th>
+<th style="text-align: right;">Maximum resident blocks/SM from recorded limits</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>naive, 16 x 16</td>
+<td style="text-align: right;">256</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">0 B</td>
+<td style="text-align: right;">100%</td>
+<td style="text-align: right;">4</td>
+</tr>
+<tr>
+<td>tile8</td>
+<td style="text-align: right;">64</td>
+<td style="text-align: right;">42</td>
+<td style="text-align: right;">512 B</td>
+<td style="text-align: right;">100%</td>
+<td style="text-align: right;">16</td>
+</tr>
+<tr>
+<td>tile12</td>
+<td style="text-align: right;">144</td>
+<td style="text-align: right;">38</td>
+<td style="text-align: right;">1152 B</td>
+<td style="text-align: right;">93.75%</td>
+<td style="text-align: right;">6</td>
+</tr>
+<tr>
+<td>tile16</td>
+<td style="text-align: right;">256</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">2048 B</td>
+<td style="text-align: right;">100%</td>
+<td style="text-align: right;">4</td>
+</tr>
+<tr>
+<td>tile32</td>
+<td style="text-align: right;">1024</td>
+<td style="text-align: right;">44</td>
+<td style="text-align: right;">8192 B</td>
+<td style="text-align: right;">100%</td>
+<td style="text-align: right;">1</td>
+</tr>
+</tbody>
+</table>
+<p>A 144-thread block occupies five 32-thread warps, including a partially filled warp. Six such blocks give 30 of the T4's 32 resident warps, explaining tile12's 93.75% theoretical occupancy. Tile32 reaches the maximum 1024 threads/block and permits only one block/SM. It fits the register/shared-memory limits, but low grid-block count can leave SMs idle for small problems.</p>
+<p>The tested experiments tie tile width to square block width. There is <strong>no evidence of an independent block-shape sweep</strong> beyond <code>(8,8,1)</code>, <code>(12,12,1)</code>, <code>(16,16,1)</code>, and <code>(32,32,1)</code>; naive always uses <code>(16,16,1)</code>.</p>
+<h2 id="general-mmult-implementations-and-verification">4. General MMULT implementations and verification</h2>
+<p>For row-major matrices, the required operation is:</p>
+<pre><code class="language-text">P[row*l + col] = sum(M[row*k + q] * N[q*l + col], q=0..k-1)
+</code></pre>
+<p>The CPU reference uses three serial loops. The naive GPU variant assigns one output element to each thread and obtains operands from global memory. The tiled GPU variant cooperatively stages two T x T tiles in shared memory, processes <code>ceil(k/T)</code> phases, and zero-fills out-of-range loads. Both synchronization barriers must be reached by <strong>all threads</strong>, including threads outside the output boundary; only the final store is conditional.</p>
+<p>The following is <strong>reference implementation guidance</strong>, not source recovered from, or tested against, the supplied reports. It requires the usual CUDA runtime and C++ headers. Arrays must be correctly sized and nonaliasing; host and device arrays must be allocated/copied by the application.</p>
+<pre><code class="language-cpp">void cpu_mmult(const float* M, const float* N, float* P,
+               int j, int k, int l) {
+    for (int row = 0; row &lt; j; ++row)
+        for (int col = 0; col &lt; l; ++col) {
+            float sum = 0.0f;
+            for (int q = 0; q &lt; k; ++q)
+                sum += M[size_t(row) * k + q] *
+                       N[size_t(q) * l + col];
+            P[size_t(row) * l + col] = sum;
+        }
+}
+
+__global__ void naive_mmult(const float* M, const float* N, float* P,
+                            int j, int k, int l) {
+    int row = blockIdx.y * blockDim.y + threadIdx.y;
+    int col = blockIdx.x * blockDim.x + threadIdx.x;
+    if (row &gt;= j || col &gt;= l) return;
+    float sum = 0.0f;
+    for (int q = 0; q &lt; k; ++q)
+        sum += M[size_t(row) * k + q] * N[size_t(q) * l + col];
+    P[size_t(row) * l + col] = sum;
+}
+
+template&lt;int T&gt;
+__global__ void tiled_mmult(const float* M, const float* N, float* P,
+                            int j, int k, int l) {
+    __shared__ float A[T][T], B[T][T];
+    int tx = threadIdx.x, ty = threadIdx.y;
+    int row = blockIdx.y * T + ty, col = blockIdx.x * T + tx;
+    float sum = 0.0f;
+    for (int phase = 0; phase &lt; (k + T - 1) / T; ++phase) {
+        int aq = phase * T + tx, bq = phase * T + ty;
+        A[ty][tx] = (row &lt; j &amp;&amp; aq &lt; k)
+            ? M[size_t(row) * k + aq] : 0.0f;
+        B[ty][tx] = (bq &lt; k &amp;&amp; col &lt; l)
+            ? N[size_t(bq) * l + col] : 0.0f;
+        __syncthreads();
+        for (int q = 0; q &lt; T; ++q)
+            sum += A[ty][q] * B[q][tx];
+        __syncthreads();
+    }
+    if (row &lt; j &amp;&amp; col &lt; l)
+        P[size_t(row) * l + col] = sum;
+}
+</code></pre>
+<p>For naive, use <code>block=(16,16,1)</code> and <code>grid=(ceil(l/16),ceil(j/16),1)</code>. For tiled specialization T, use <code>block=(T,T,1)</code> and <code>grid=(ceil(l/T),ceil(j/T),1)</code>. All four requested tile widths fit this T4. Test nonsquare dimensions and tails in <strong>all three dimensions</strong>, not just the output dimensions.</p>
+<h3 id="host-verification-and-the-maximum-error-question">Host verification and the maximum error question</h3>
+<p><strong>The maximum observed single-element absolute error fraction is unknown for every supplied case.</strong> Nsight kernel-performance counters do not contain the output values required to calculate it. Neither zero error nor successful verification can be inferred from these reports.</p>
+<table>
+<thead>
+<tr>
+<th>Output size / k</th>
+<th>Naive maximum error fraction</th>
+<th>Tiled maximum error fraction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>100 x 100 / 100</td>
+<td>Not recorded</td>
+<td>Not recorded for T=8,12,16,32</td>
+</tr>
+<tr>
+<td>1000 x 1000 / 1000</td>
+<td>Not recorded</td>
+<td>Not recorded for T=8,12,16,32</td>
+</tr>
+<tr>
+<td>2000 x 3000 / 2500</td>
+<td>Not recorded</td>
+<td>Not recorded for T=8,12,16,32</td>
+</tr>
+</tbody>
+</table>
+<p>For a nonzero reference, compute <code>abs(cpu-gpu)/abs(cpu)</code>. For the positive CPU values implicit in the assignment's expression, this equals its stated <code>abs(cpu-gpu)/cpu</code>. The absolute denominator also handles negative references sensibly. A zero reference requires an absolute tolerance, because its relative error is undefined.</p>
+<p>The following host helper checks finite values, applies a mixed tolerance, and reports the requested maximum relative fraction. <strong>Illustrative starting tolerances</strong> are <code>rtol=1e-4</code> and <code>atol=1e-5</code> for unit-scale, nonnegative FP32 test inputs; they are not established acceptance thresholds for arbitrary inputs or cancellation-heavy data.</p>
+<pre><code class="language-cpp">struct Check {
+    bool pass;
+    double max_abs;
+    double max_fraction; // Over nonzero reference elements.
+    bool has_nonzero_reference;
+};
+
+Check verify(const std::vector&lt;float&gt;&amp; cpu,
+             const std::vector&lt;float&gt;&amp; gpu,
+             double rtol = 1e-4, double atol = 1e-5) {
+    if (cpu.size() != gpu.size())
+        throw std::invalid_argument(&quot;Output sizes differ&quot;);
+    Check out{true, 0.0, 0.0, false};
+    for (size_t i = 0; i &lt; cpu.size(); ++i) {
+        double ref = cpu[i], got = gpu[i];
+        if (!std::isfinite(ref) || !std::isfinite(got)) {
+            out.pass = false;
+            out.max_abs = out.max_fraction =
+                std::numeric_limits&lt;double&gt;::infinity();
+            continue;
+        }
+        double error = std::abs(ref - got);
+        out.max_abs = std::max(out.max_abs, error);
+        out.pass &amp;= error &lt;= atol + rtol * std::abs(ref);
+        if (ref != 0.0) {
+            out.has_nonzero_reference = true;
+            out.max_fraction = std::max(out.max_fraction,
+                                       error / std::abs(ref));
+        }
+    }
+    return out;
+}
+</code></pre>
+<p>Use the <strong>same input matrices</strong> for CPU, naive, and every tiled run. For each of the three sizes, compute the CPU reference once, launch naive and each tiled specialization, check CUDA launch/copy/synchronization errors, copy each result back, and call <code>verify(cpu,gpu)</code>. Also call <code>verify(naive,tiled)</code> if a direct pairwise check is desired. Log maximum absolute error, maximum fraction over nonzero references, and pass/fail for each comparison; report the fraction as a fraction, or multiply by 100 if labeling it as a percentage. An all-zero reference has no defined maximum relative fraction and should be labeled accordingly. FMA changes rounding, so bitwise equality is not required.</p>
+<p>This explains how to fulfill the implementation/verification requirements; the supplied profiles alone do not demonstrate that the original host application fulfilled them.</p>
+<h2 id="release-profiling-and-native-baselines">5. Release profiling and native baselines</h2>
+<p>The recorded session command for the largest tile32 run includes <code>--set full</code> and launches <code>x64\Release\Homework-3-MMULT.exe -tiled -k2500 -tile32</code>. The Serial-labeled report instead records <code>-naive -k100</code>. Nsight Compute profiles GPU launches; CPU timing must be collected separately with a host timer.</p>
+<p>To reproduce the assignment's <strong>native GUI baseline workflow</strong>, open each existing report, select its kernel result, add it as a baseline using the baseline control, and assign descriptive names such as <code>P2000x3000_k2500_tile32_block32x32_FMA</code>. Repeat for the other variants and cases, enable those baselines, and inspect <strong>GPU Speed Of Light -&gt; Roofline</strong>. Label the Serial-file entry as an additional naive k=100 run, not CPU serial. Figure 1 supplies the combined comparison without claiming that the UI baseline list or original binary reports were edited.</p>
+<h2 id="disabling-fma-for-the-selected-largest-case-configuration">6. Disabling FMA for the selected largest-case configuration</h2>
+<p>Select <strong>TILE_WIDTH=32, block=(32,32,1)</strong> for P = 2000 x 3000, k = 2500, based on the fastest original kernel duration. The new matching report is <code>NoFFMA-MMULT-tiled-k2500-tile32--Profile.ncu-repz</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th style="text-align: right;">FMA enabled (ID 15)</th>
+<th style="text-align: right;">FMA disabled (ID 31)</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HW AI</td>
+<td style="text-align: right;">15.381785 FLOP/B</td>
+<td style="text-align: right;">15.394078 FLOP/B</td>
+<td>+0.08%</td>
+</tr>
+<tr>
+<td>Duration</td>
+<td style="text-align: right;">30.251040 ms</td>
+<td style="text-align: right;">30.413312 ms</td>
+<td>+0.162272 ms; +0.54%</td>
+</tr>
+<tr>
+<td>FP32 hardware throughput</td>
+<td style="text-align: right;">1013.52 GFLOP/s</td>
+<td style="text-align: right;">1008.12 GFLOP/s</td>
+<td>-0.53%</td>
+</tr>
+<tr>
+<td>Useful throughput</td>
+<td style="text-align: right;">991.70 GFLOP/s</td>
+<td style="text-align: right;">986.41 GFLOP/s</td>
+<td>-0.53%</td>
+</tr>
+<tr>
+<td>Compute (SM) Throughput</td>
+<td style="text-align: right;">71.37%</td>
+<td style="text-align: right;">70.35%</td>
+<td>-1.02 percentage points</td>
+</tr>
+<tr>
+<td>Achieved occupancy</td>
+<td style="text-align: right;">100.13% reported</td>
+<td style="text-align: right;">99.99%</td>
+<td>-0.14 percentage points; both approximately full</td>
+</tr>
+<tr>
+<td>Theoretical occupancy</td>
+<td style="text-align: right;">100%</td>
+<td style="text-align: right;">100%</td>
+<td>Unchanged</td>
+</tr>
+<tr>
+<td>Registers/thread</td>
+<td style="text-align: right;">44</td>
+<td style="text-align: right;">40</td>
+<td>-4; no occupancy-tier change</td>
+</tr>
+<tr>
+<td>Static shared memory/block</td>
+<td style="text-align: right;">8192 bytes</td>
+<td style="text-align: right;">8192 bytes</td>
+<td>Unchanged</td>
+</tr>
+<tr>
+<td>DRAM bytes read + written</td>
+<td style="text-align: right;">1,993,273,184</td>
+<td style="text-align: right;">1,991,701,696</td>
+<td>-0.08%</td>
+</tr>
+<tr>
+<td>DRAM throughput</td>
+<td style="text-align: right;">65.891 GB/s</td>
+<td style="text-align: right;">65.488 GB/s</td>
+<td>-0.61%</td>
+</tr>
+<tr>
+<td>FFMA / FADD / FMUL per elapsed cycle</td>
+<td style="text-align: right;">331.91 / 0 / 0</td>
+<td style="text-align: right;">0 / 327.15 / 327.15</td>
+<td>Fused arithmetic replaced by separate operations</td>
+</tr>
+<tr>
+<td>Executed instructions (warp-level)</td>
+<td style="text-align: right;">1,504,273,728</td>
+<td style="text-align: right;">1,983,339,840</td>
+<td>+31.85% across the whole kernel</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Yes, recorded performance changed, but only slightly:</strong> disabling FMA increased duration by 0.54%, rather than doubling it. The floating-point arithmetic instruction count doubles for the multiply-add work, but the total kernel instruction count rises only 31.85%, because loads, stores, indexing, branches, and synchronization are also present. The nominal launch is unchanged: 5922 blocks, 1024 threads/block, and 148.05 waves/SM.</p>
+<p>The original run was not near its FP32 ceiling and already had substantial MIO-pipeline stalls. The NoFFMA run still reports MIO throttling: <strong>17.5 cycles/warp, 58.2% of cycles between issues</strong>, versus 23.6 cycles and 60.3% originally. Eligible warps/scheduler rise from <strong>0.97 to 1.12</strong>. These measurements are consistent with instruction scheduling and on-chip memory pressure limiting the kernel, rather than a pure multiply-add-throughput bottleneck; stall cycles per instruction are not total stall time and cannot alone prove a causal improvement. Splitting arithmetic can therefore add instructions without adding a proportional kernel-time penalty.</p>
+<p>The runs are not controlled repeated trials: their recorded SM clocks are approximately <strong>1.527 and 1.541 GHz</strong>, and there is only one recorded launch per configuration. A 0.54% duration difference is too small to establish a reproducible compiler-option penalty from this evidence alone. The conclusion is <strong>nearly unchanged observed performance</strong>, not that disabling FMA is generally free or beneficial. Register allocation actually decreases here, so the hypothetical increased-register/occupancy penalty does not occur.</p>
+<p>All 15 NoFFMA reports have <strong>zero FFMA</strong> and equal, nonzero FADD/FMUL rates in the FP32 counters. The selected report's SASS also contains separate <code>FMUL</code> and <code>FADD</code>. Its recorded command launches <code>x64\Release\Homework-3-MMULT.exe -tiled -k2500 -tile32</code>. This establishes unfused FP32 execution in the measured kernels, although the original project settings/compiler invocation are not available to independently certify the precise flag used.</p>
+<p>For reproducibility, the requested setting is Visual Studio <strong>Release -&gt; Configuration Properties -&gt; CUDA C/C++ -&gt; Command Line -&gt; Additional Options: <code>--fmad=false</code></strong> (the compiler default is <code>true</code>), followed by a rebuild and profiling of the same arguments. Add the imported NoFFMA runs as separate baselines, with names such as <code>P2000x3000_k2500_tile32_block32x32_NoFMA</code>. No application rebuild or new GPU profiling was performed for this report update.</p>
+<h3 id="complete-new-noffma-sweep">Complete new NoFFMA sweep</h3>
+<p>Each block width equals TILE_WIDTH for tiled kernels; naive retains a 16 x 16 block. Duration change is relative to the matching original FMA-enabled report; a positive change means slower.</p>
+<table>
+<thead>
+<tr>
+<th>Plot ID / size / variant</th>
+<th style="text-align: right;">Duration ms</th>
+<th style="text-align: right;">Change %</th>
+<th style="text-align: right;">HW AI FLOP/B</th>
+<th style="text-align: right;">HW GFLOP/s</th>
+<th style="text-align: right;">Useful GFLOP/s</th>
+<th style="text-align: right;">SM %</th>
+<th style="text-align: right;">Occ. %</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>17 / 100 x 100 / naive</td>
+<td style="text-align: right;">0.007584</td>
+<td style="text-align: right;">+1.28</td>
+<td style="text-align: right;">22.878</td>
+<td style="text-align: right;">263.72</td>
+<td style="text-align: right;">263.71</td>
+<td style="text-align: right;">30.43</td>
+<td style="text-align: right;">27.50</td>
+</tr>
+<tr>
+<td>18 / 100 x 100 / tile8</td>
+<td style="text-align: right;">0.007776</td>
+<td style="text-align: right;">-0.41</td>
+<td style="text-align: right;">25.622</td>
+<td style="text-align: right;">289.33</td>
+<td style="text-align: right;">257.20</td>
+<td style="text-align: right;">25.91</td>
+<td style="text-align: right;">25.50</td>
+</tr>
+<tr>
+<td>19 / 100 x 100 / tile12</td>
+<td style="text-align: right;">0.007392</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">29.776</td>
+<td style="text-align: right;">340.82</td>
+<td style="text-align: right;">270.56</td>
+<td style="text-align: right;">29.96</td>
+<td style="text-align: right;">30.01</td>
+</tr>
+<tr>
+<td>20 / 100 x 100 / tile16</td>
+<td style="text-align: right;">0.007040</td>
+<td style="text-align: right;">+0.92</td>
+<td style="text-align: right;">32.424</td>
+<td style="text-align: right;">399.11</td>
+<td style="text-align: right;">284.09</td>
+<td style="text-align: right;">30.09</td>
+<td style="text-align: right;">30.65</td>
+</tr>
+<tr>
+<td>21 / 100 x 100 / tile32</td>
+<td style="text-align: right;">0.011296</td>
+<td style="text-align: right;">+4.44</td>
+<td style="text-align: right;">49.053</td>
+<td style="text-align: right;">371.30</td>
+<td style="text-align: right;">177.05</td>
+<td style="text-align: right;">26.34</td>
+<td style="text-align: right;">99.43</td>
+</tr>
+<tr>
+<td>22 / 1000 x 1000 / naive</td>
+<td style="text-align: right;">2.650560</td>
+<td style="text-align: right;">-1.58</td>
+<td style="text-align: right;">38.330</td>
+<td style="text-align: right;">754.56</td>
+<td style="text-align: right;">754.56</td>
+<td style="text-align: right;">76.22</td>
+<td style="text-align: right;">98.17</td>
+</tr>
+<tr>
+<td>23 / 1000 x 1000 / tile8</td>
+<td style="text-align: right;">2.722272</td>
+<td style="text-align: right;">-0.14</td>
+<td style="text-align: right;">50.433</td>
+<td style="text-align: right;">734.68</td>
+<td style="text-align: right;">734.68</td>
+<td style="text-align: right;">64.40</td>
+<td style="text-align: right;">98.56</td>
+</tr>
+<tr>
+<td>24 / 1000 x 1000 / tile12</td>
+<td style="text-align: right;">2.586976</td>
+<td style="text-align: right;">+0.33</td>
+<td style="text-align: right;">38.079</td>
+<td style="text-align: right;">791.80</td>
+<td style="text-align: right;">773.10</td>
+<td style="text-align: right;">69.61</td>
+<td style="text-align: right;">92.73</td>
+</tr>
+<tr>
+<td>25 / 1000 x 1000 / tile16</td>
+<td style="text-align: right;">2.091840</td>
+<td style="text-align: right;">+0.32</td>
+<td style="text-align: right;">45.044</td>
+<td style="text-align: right;">979.24</td>
+<td style="text-align: right;">956.10</td>
+<td style="text-align: right;">73.39</td>
+<td style="text-align: right;">98.66</td>
+</tr>
+<tr>
+<td>26 / 1000 x 1000 / tile32</td>
+<td style="text-align: right;">2.111296</td>
+<td style="text-align: right;">+1.87</td>
+<td style="text-align: right;">28.101</td>
+<td style="text-align: right;">1017.15</td>
+<td style="text-align: right;">947.29</td>
+<td style="text-align: right;">69.88</td>
+<td style="text-align: right;">99.95</td>
+</tr>
+<tr>
+<td>27 / 2000 x 3000 / naive</td>
+<td style="text-align: right;">54.943936</td>
+<td style="text-align: right;">+4.33</td>
+<td style="text-align: right;">7.872</td>
+<td style="text-align: right;">546.00</td>
+<td style="text-align: right;">546.01</td>
+<td style="text-align: right;">64.85</td>
+<td style="text-align: right;">99.05</td>
+</tr>
+<tr>
+<td>28 / 2000 x 3000 / tile8</td>
+<td style="text-align: right;">60.760960</td>
+<td style="text-align: right;">-0.10</td>
+<td style="text-align: right;">3.980</td>
+<td style="text-align: right;">494.54</td>
+<td style="text-align: right;">493.74</td>
+<td style="text-align: right;">53.12</td>
+<td style="text-align: right;">98.55</td>
+</tr>
+<tr>
+<td>29 / 2000 x 3000 / tile12</td>
+<td style="text-align: right;">44.752416</td>
+<td style="text-align: right;">+1.42</td>
+<td style="text-align: right;">5.959</td>
+<td style="text-align: right;">673.84</td>
+<td style="text-align: right;">670.35</td>
+<td style="text-align: right;">67.76</td>
+<td style="text-align: right;">93.33</td>
+</tr>
+<tr>
+<td>30 / 2000 x 3000 / tile16</td>
+<td style="text-align: right;">34.068768</td>
+<td style="text-align: right;">+2.56</td>
+<td style="text-align: right;">7.935</td>
+<td style="text-align: right;">887.15</td>
+<td style="text-align: right;">880.57</td>
+<td style="text-align: right;">71.16</td>
+<td style="text-align: right;">100.36</td>
+</tr>
+<tr>
+<td>31 / 2000 x 3000 / tile32</td>
+<td style="text-align: right;">30.413312</td>
+<td style="text-align: right;">+0.54</td>
+<td style="text-align: right;">15.394</td>
+<td style="text-align: right;">1008.12</td>
+<td style="text-align: right;">986.41</td>
+<td style="text-align: right;">70.35</td>
+<td style="text-align: right;">99.99</td>
+</tr>
+</tbody>
+</table>
+<p>With FMA disabled, <strong>tile16 is fastest for both the small and medium cases</strong>, and tile32 remains fastest for the largest case. The medium-case tile16/tile32 ordering reverses, but their new durations differ by only 0.92%, again requiring repeated trials before treating the reversal as robust. Highest AI remains tile32, tile8, tile32 respectively; highest HW GFLOP/s remains tile16, tile32, tile32. For the medium case, tile32's larger padded arithmetic count explains why it can have higher HW GFLOP/s yet a longer duration than tile16. Highest SM-% is naive, naive, tile16 respectively; highest recorded achieved occupancy is tile32, tile32, tile16 respectively. Differences around 100% do not establish meaningful occupancy advantages.</p>
+<h3 id="what-should-happen-to-arithmetic-intensity">What should happen to arithmetic intensity?</h3>
+<p>An FMA computes a multiply and an add in <strong>one instruction but two floating-point operations</strong>. Separate FMUL and FADD compute the same <strong>two FLOPs in two instructions</strong>. Therefore:</p>
+<pre><code class="language-text">With FMA:       2 FLOPs / B bytes
+Without FMA:    (1 MUL FLOP + 1 ADD FLOP) / B bytes
+</code></pre>
+<p><strong>FLOP-based algorithmic AI does not double or halve merely because FMA is disabled.</strong> It remains the same if executed arithmetic and memory traffic remain unchanged. Floating-point <strong>instruction</strong> count increases, but instructions/byte is not the FLOP/byte metric used by this Roofline. Measured HW AI can still shift if the compiler changes executed operations, register allocation, spilling, or cache/DRAM traffic.</p>
+<p>The selected pair illustrates this directly: multiplying HW GFLOP/s by duration gives approximately <strong>30.66 billion executed FP32 FLOPs in each run</strong>, including padding. DRAM traffic changes by only -0.08%, accounting for the approximately +0.08% measured AI shift. The algorithm is not doing twice the useful arithmetic.</p>
+<p>The chart retains the usual <strong>FMA-capable FP32 roof</strong> to compare all baselines consistently. For a balanced separate-MUL/ADD stream on the same FP32 execution resources, an idealized instruction-mix ceiling is approximately <strong>half</strong> that FMA FLOP/s peak. For the selected NoFFMA run, that is approximately <strong>3944 GFLOP/s</strong>, with a DRAM ridge near <strong>12.045 FLOP/B</strong> instead of 24.090 using that run's full FMA-capable roof. Its AI of 15.394 is therefore on the compute side of this <strong>mix-adjusted</strong> ridge, although its approximately 1008 GFLOP/s is still far below even that reduced ceiling. This changes the geometric classification, not the evidence for an actually saturated FP32 bottleneck. Against each run's conventional FMA-capable roof, the new runs have the same left/right classification pattern as the original sweep.</p>
+<p>The general tiled algorithm's idealized tile-level global-memory AI is approximately <strong>T/4 FLOP/byte</strong> for FP32, neglecting output stores and edge overhead: <code>2*T^3 FLOPs / (2*T^2*4 bytes)</code>. Naive is approximately 0.25 FLOP/byte under a no-reuse load model. These are <strong>not</strong> the measured DRAM AIs in the tables: caches, cross-block reuse, padding, and actual traffic materially change the hardware metric. Neither idealized expression changes solely from disabling FMA.</p>
+<h2 id="additional-assignment-questions">7. Additional assignment questions</h2>
+<h3 id="is-transposing-n-worth-its-overhead">Is transposing N worth its overhead?</h3>
+<p><strong>Not established by these profiles:</strong> there is no transpose kernel, transposed-layout MMULT run, or end-to-end timing comparison. The reference indexing in Section 4 already assumes both M and N are stored row-major. Reading N down a column in one thread does not mean N itself is column-major.</p>
+<p>For the given one-output-per-thread mapping, adjacent x-lanes read adjacent <code>N[q*l + col]</code> values at fixed q, so the row-major N accesses are coalesced across the warp. Physically transposing N and preserving the same mathematical product requires indexing <code>N_T[col*k + q]</code>; at fixed q, adjacent lanes would then be k floats apart. Thus transposition alone can <strong>worsen</strong> coalescing for this mapping. The tiled reference similarly loads contiguous rows cooperatively and reuses N in shared memory; a global transpose is not automatically beneficial. A redesigned kernel or a genuinely different original storage layout could change that conclusion, but neither is demonstrated by the available source-free reports. Merely transposing without correcting dimensions/indexing changes the operation, not just its performance.</p>
+<p>The correct break-even test for one multiplication is:</p>
+<pre><code class="language-text">transpose_time + transposed_layout_mmult_time &lt; original_mmult_time
+</code></pre>
+<p>For R multiplications reusing the same transposed N, compare <code>transpose_time/R + transposed_layout_mmult_time</code> with the original time. For the largest case, N has 7.5 million FP32 elements (30 MB), so a materialized transpose must at least read and write <strong>60 MB</strong> and allocate another 30 MB. At the original tile32 roof's 313.28 GB/s, that traffic alone has an optimistic lower bound of approximately <strong>0.192 ms</strong>, excluding launch, layout inefficiency, and other overheads. This is a bandwidth model, not a measured transpose time. Without a measured MMULT improvement greater than the actual transpose cost, the overhead is not justified; reuse across many products can make it worthwhile if the redesigned access pattern actually helps.</p>
+<h3 id="does-a-32-x-32-block-guarantee-highest-occupancy">Does a 32 x 32 block guarantee highest occupancy?</h3>
+<p><strong>No.</strong> 1024 threads/block is a launch limit, while occupancy is resident active warps relative to the SM's warp capacity. Registers, shared memory, warp/block allocation granularity, device-specific resident-thread limits, and available blocks all matter. On this T4, one tile32 block uses all 32 resident warp slots and fits its resources, so theoretical occupancy is 100%; tile8 and tile16 can also reach 100% using multiple resident blocks. Tile12 reaches 93.75% because six five-warp blocks fill only 30 warp slots.</p>
+<p>For small inputs, tile32 launches only 16 blocks across 40 SMs: its approximately 99% achieved occupancy does not mean device-wide coverage is full, and it is slower than tile16. A register/shared-memory demand too large to fit one 1024-thread block would make that launch invalid, not guarantee occupancy. On GPUs supporting more than 1024 resident threads/SM, one such block may also leave warp capacity unused if a second block cannot fit. Even high occupancy does not guarantee many <strong>eligible</strong> warps or high performance, as the selected largest-case scheduling metrics show.</p>
+<h2 id="sources-and-traceability">8. Sources and traceability</h2>
+<p>Primary evidence is the original local reports:</p>
+<table>
+<thead>
+<tr>
+<th>Plot IDs</th>
+<th>Report files</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>01, 06, 11</td>
+<td><code>MMULT-naive-k100--Profile.ncu-repz</code>, <code>MMULT-naive-k1000--Profile.ncu-repz</code>, <code>MMULT-naive-k2500--Profile.ncu-repz</code></td>
+</tr>
+<tr>
+<td>02-05</td>
+<td><code>MMULT-tiled-k100-tile8--Profile.ncu-repz</code>, <code>MMULT-tiled-k100-tile12--Profile.ncu-repz</code>, <code>MMULT-tiled-k100-tile16--Profile.ncu-repz</code>, <code>MMULT-tiled-k100-tile32--Profile.ncu-repz</code></td>
+</tr>
+<tr>
+<td>07-10</td>
+<td>The corresponding four <code>MMULT-tiled-k1000-tile...--Profile.ncu-repz</code> reports</td>
+</tr>
+<tr>
+<td>12-15</td>
+<td>The corresponding four <code>MMULT-tiled-k2500-tile...--Profile.ncu-repz</code> reports</td>
+</tr>
+<tr>
+<td>16</td>
+<td><code>MMULT-Serial-Profile.ncu-repz</code></td>
+</tr>
+<tr>
+<td>17, 22, 27</td>
+<td>The three corresponding <code>NoFFMA-MMULT-naive-k...--Profile.ncu-repz</code> reports</td>
+</tr>
+<tr>
+<td>18-21</td>
+<td>The four <code>NoFFMA-MMULT-tiled-k100-tile...--Profile.ncu-repz</code> reports, tile8/12/16/32</td>
+</tr>
+<tr>
+<td>23-26</td>
+<td>The four corresponding <code>NoFFMA-MMULT-tiled-k1000-tile...--Profile.ncu-repz</code> reports</td>
+</tr>
+<tr>
+<td>28-31</td>
+<td>The four corresponding <code>NoFFMA-MMULT-tiled-k2500-tile...--Profile.ncu-repz</code> reports</td>
+</tr>
+</tbody>
+</table>
+<p>All report data were imported with <code>ncu --import &lt;report&gt; --page raw --csv --print-units base</code> and <code>--page details --csv --print-units base</code>. Session/device metadata and original/NoFFMA tile32 SASS were also inspected; the new SASS export is retained as <code>MMULT-analysis\NoFFMA-MMULT-tiled-k2500-tile32.sass.txt</code>. Calculations are reproducible with <code>MMULT-analysis\extract-metrics.ps1</code>; all 31 raw/detail export pairs and derived values, including an explicit enabled/disabled FMA label, are retained in that directory. <code>MMULT-analysis\render-report.ps1</code> regenerates the combined SVG and the HTML used for the PDF.</p>
+<p>Roofline expressions were checked against <code>C:\Program Files\NVIDIA Corporation\Nsight Compute 2026.4.0\sections\SpeedOfLight_RooflineChart.section</code>. Definitions and interpretation: <a href="https://docs.nvidia.com/nsight-compute/ProfilingGuide/index.html#roofline">NVIDIA Nsight Compute Profiling Guide: Roofline</a>. Compiler option: <a href="https://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html#fmad">NVIDIA CUDA Compiler Driver: --fmad</a>.</p>
+</body></html>
