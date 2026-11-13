@@ -1,0 +1,214 @@
+﻿/********************************
+* Author: Julian Soh
+* Date: Fall quarter 2026
+* EE P 524 - GPU Programming
+* Homework 4 - GMEM and SMEM
+* *******************************/
+#include "device_launch_parameters.h"
+#include "cuda_runtime.h"
+#include <stdio.h>
+#include "Error-Checking.h"
+#include <cstdlib>
+#include <cmath>
+#include <new>
+#include <string.h>
+#include <fstream>
+#include <vector>
+#include <iomanip>
+#include <limits>
+#include <locale>
+
+// ==============================
+// Function Declarations
+// ==============================
+
+bool load_mmult_inputs(std::vector<float>& M_h, std::vector<float>& N_h);
+
+
+// ==============================
+// Kernel Declarations
+// ==============================
+
+// Naive square matrix multiplication: one thread computes one element of P = M * N.
+// M, N, and P are device pointers to row-major matrices, indexed as row * width + col.
+// Each multiply reads its operands from global memory (possibly served by caches).
+__global__ void mmult_naive_Kernel(const float* M, const float* N, float* P, int width)
+{
+    // Map the two-dimensional block and thread coordinates to an output element.
+    int row = blockIdx.y * blockDim.y + threadIdx.y;
+    int col = blockIdx.x * blockDim.x + threadIdx.x;
+    float sum;
+	if (row < width && col < width) {
+		sum = 0.0f;
+		// Take the dot product of row 'row' of M and column 'col' of N.
+		for (int k = 0; k < width; ++k)
+		{
+			sum += M[row * width + k] * N[k * width + col];
+		}
+	}
+	// This write is outside the bounds check; the current launch must have no
+	// out-of-range threads, or this uses an uninitialized sum and writes out of bounds.
+	P[row * width + col] = sum;
+}
+
+// Tiled square matrix multiplication using a pair of per-block shared-memory tiles.
+// The current indexing and fixed tile arrays require a 16-by-16 thread block.
+__global__ void mmult_tiled_Kernel(const float* M, const float* N, float* P, int width)
+{
+	__shared__ float M_tile[16][16];
+	__shared__ float N_tile[16][16];
+	int row = blockIdx.y * blockDim.y + threadIdx.y;
+	int col = blockIdx.x * blockDim.x + threadIdx.x;
+	float sum = 0.0f;
+	// Each phase covers up to 16 elements of the shared inner dimension.
+	for (int tile = 0; tile < (width + 15) / 16; ++tile) {
+		// Cooperatively load one element per thread; pad partial edge tiles with zero.
+		if (row < width && tile * 16 + threadIdx.x < width) {
+			M_tile[threadIdx.y][threadIdx.x] = M[row * width + tile * 16 + threadIdx.x];
+		}
+		else {
+			M_tile[threadIdx.y][threadIdx.x] = 0.0f;
+		}
+		if (col < width && tile * 16 + threadIdx.y < width) {
+			N_tile[threadIdx.y][threadIdx.x] = N[(tile * 16 + threadIdx.y) * width + col];
+		}
+		else {
+			N_tile[threadIdx.y][threadIdx.x] = 0.0f;
+		}
+		// All tile elements must be loaded before any thread consumes them.
+		__syncthreads();
+		for (int k = 0; k < 16; ++k) {
+			sum += M_tile[threadIdx.y][k] * N_tile[k][threadIdx.x];
+		}
+		// Finish reading the tiles before any thread overwrites them in the next phase.
+		__syncthreads();
+	}
+	if (row < width && col < width) {
+		P[row * width + col] = sum;
+	}
+}
+
+
+int main()
+{
+	// The vectors own the input data in host RAM; loading does not allocate GPU memory.
+	std::vector<float> M_h;
+	std::vector<float> N_h;
+	if (!load_mmult_inputs(M_h, N_h)) {
+		return 1;
+	}
+
+
+    // cudaDeviceReset must be called before exiting in order for profiling and
+    // tracing tools such as Nsight and Visual Profiler to show complete traces.
+    cudaStatus = cudaDeviceReset();
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "cudaDeviceReset failed!");
+        return 1;
+    }
+
+    return 0;
+}
+
+// ==============================
+// non-CUDA helper functions
+// ==============================
+
+// Load two headerless, row-major 256-by-256 matrices of little-endian float32
+// values into host vectors. Paths are relative to the process working directory.
+// Return false and report the input file if opening, sizing, or reading fails.
+bool load_mmult_inputs(std::vector<float>& M_h, std::vector<float>& N_h)
+{
+    constexpr size_t matrixWidth = 256;
+    constexpr size_t elementCount = matrixWidth * matrixWidth;
+    static_assert(sizeof(float) == 4, "Input matrices require 32-bit floats");
+    const std::streamsize expectedBytes = static_cast<std::streamsize>(elementCount * sizeof(float));
+    const char* fileNames[] = {
+        "inputs\\M_256x256_f32le.bin",
+        "inputs\\N_256x256_f32le.bin"
+    };
+    std::vector<float>* matrices[] = { &M_h, &N_h };
+
+    for (int i = 0; i < 2; ++i) {
+        // Open at the end so tellg can verify the exact file size before reading.
+        std::ifstream file(fileNames[i], std::ios::binary | std::ios::ate);
+        if (!file.is_open()) {
+            fprintf(stderr, "[ERROR] Failed to open matrix input: %s\n", fileNames[i]);
+            return false;
+        }
+        if (file.tellg() != expectedBytes) {
+            fprintf(stderr, "[ERROR] Matrix input has an unexpected size: %s\n", fileNames[i]);
+            return false;
+        }
+
+        matrices[i]->resize(elementCount);
+        file.seekg(0, std::ios::beg);
+        if (!file.read(reinterpret_cast<char*>(matrices[i]->data()), expectedBytes)) {
+            fprintf(stderr, "[ERROR] Failed to read matrix input: %s\n", fileNames[i]);
+            return false;
+        }
+    }
+    return true;
+}
+
+// ==============================
+// CUDA helper functions
+// ==============================
+
+// Helper function mmult_naive_Kernel to multiply two square matrices in global memory. The matrices are row-major and have the same width.
+cudaError_t mmult_naive_Kernel(float* M_h, float* N_h, float* P, int width)
+{
+    if (M_h == nullptr || N_h == nullptr || P == nullptr || width <= 0 ||
+        static_cast<size_t>(width) > (std::numeric_limits<size_t>::max)() / sizeof(float) / static_cast<size_t>(width)) {
+        return checkCuda(cudaErrorInvalidValue, "naive_mmult inputs and dimensions");
+    }
+
+    float* M_d = nullptr;
+    float* N_d = nullptr;
+    float* P_d = nullptr;
+    const size_t mBytes = static_cast<size_t>(width) * width * sizeof(float);
+    const size_t nBytes = static_cast<size_t>(width) * width * sizeof(float);
+    const size_t pBytes = static_cast<size_t>(width) * width * sizeof(float);
+    cudaError_t cudaStatus = cudaSuccess;
+    cudaError_t cleanupStatus = cudaSuccess;
+
+    // Part 1: Allocate space for both inputs and the output in GPU global memory.
+    cudaStatus = checkCuda(cudaMalloc((void**)&M_d, mBytes), "cudaMalloc M_d");
+    if (cudaStatus != cudaSuccess) goto Cleanup;
+    cudaStatus = checkCuda(cudaMalloc((void**)&N_d, nBytes), "cudaMalloc N_d");
+    if (cudaStatus != cudaSuccess) goto Cleanup;
+    cudaStatus = checkCuda(cudaMalloc((void**)&P_d, pBytes), "cudaMalloc P_d");
+    if (cudaStatus != cudaSuccess) goto Cleanup;
+
+    // Copy the two row-major host inputs to their device buffers. P_d is output
+    // storage, so its contents do not need to be copied from the host.
+    cudaStatus = checkCuda(cudaMemcpy(M_d, M, mBytes, cudaMemcpyHostToDevice), "copy M to device");
+    if (cudaStatus != cudaSuccess) goto Cleanup;
+    cudaStatus = checkCuda(cudaMemcpy(N_d, N, nBytes, cudaMemcpyHostToDevice), "copy N to device");
+    if (cudaStatus != cudaSuccess) goto Cleanup;
+
+	// Part 2: Call kernel - to launch a grid of threads to perform Matrix multiplication. Each thread computes one output element.
+
+
+
+
+    // Part 3: Copy from device memory to host memory
+
+
+    // Part 4: Release allocations even if an earlier operation failed. Preserve
+    // the first error while still attempting to free every allocated buffer.
+Cleanup:
+    if (P_d != nullptr) {
+        cleanupStatus = checkCuda(cudaFree(P_d), "cudaFree P_d");
+        if (cudaStatus == cudaSuccess) cudaStatus = cleanupStatus;
+    }
+    if (N_d != nullptr) {
+        cleanupStatus = checkCuda(cudaFree(N_d), "cudaFree N_d");
+        if (cudaStatus == cudaSuccess) cudaStatus = cleanupStatus;
+    }
+    if (M_d != nullptr) {
+        cleanupStatus = checkCuda(cudaFree(M_d), "cudaFree M_d");
+        if (cudaStatus == cudaSuccess) cudaStatus = cleanupStatus;
+    }
+    return cudaStatus;
+}

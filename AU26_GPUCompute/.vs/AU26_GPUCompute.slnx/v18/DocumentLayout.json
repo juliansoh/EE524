@@ -3,8 +3,12 @@
   "WorkspaceRootPath": "E:\\Dev\\EE524\\AU26_GPUCompute\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{501B9C4A-20FB-CB30-6EBE-B450FA2F6C27}|Homework-3-MMULT\\Homework-3-MMULT.vcxproj|E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-3-MMULT\\kernel.cu||{8B382828-6202-11D1-8870-0000F87579D2}",
-      "RelativeMoniker": "D:0:0:{501B9C4A-20FB-CB30-6EBE-B450FA2F6C27}|Homework-3-MMULT\\Homework-3-MMULT.vcxproj|solutionrelative:Homework-3-MMULT\\kernel.cu||{8B382828-6202-11D1-8870-0000F87579D2}"
+      "AbsoluteMoniker": "D:0:0:{61EEB15B-7474-6D10-45E1-F1A5FA116BD2}|Homework-4\\Homework-4.vcxproj|E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-4\\kernel.cu||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{61EEB15B-7474-6D10-45E1-F1A5FA116BD2}|Homework-4\\Homework-4.vcxproj|solutionrelative:Homework-4\\kernel.cu||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{61EEB15B-7474-6D10-45E1-F1A5FA116BD2}|Homework-4\\Homework-4.vcxproj|E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-4\\Error-Checking.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{61EEB15B-7474-6D10-45E1-F1A5FA116BD2}|Homework-4\\Homework-4.vcxproj|solutionrelative:Homework-4\\Error-Checking.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     }
   ],
   "DocumentGroupContainers": [
@@ -24,13 +28,26 @@
               "$type": "Document",
               "DocumentIndex": 0,
               "Title": "kernel.cu",
-              "DocumentMoniker": "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-3-MMULT\\kernel.cu",
-              "RelativeDocumentMoniker": "Homework-3-MMULT\\kernel.cu",
-              "ToolTip": "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-3-MMULT\\kernel.cu",
-              "RelativeToolTip": "Homework-3-MMULT\\kernel.cu",
-              "ViewState": "AgIAAFsAAAAAAAAAAAAAAGEAAABLAAAAAAAAAA==",
+              "DocumentMoniker": "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-4\\kernel.cu",
+              "RelativeDocumentMoniker": "Homework-4\\kernel.cu",
+              "ToolTip": "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-4\\kernel.cu",
+              "RelativeToolTip": "Homework-4\\kernel.cu",
+              "ViewState": "AgIAAAcAAAAAAAAAAAAhwKcAAAAuAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
-              "WhenOpened": "2026-11-06T10:15:10.012Z",
+              "WhenOpened": "2026-11-13T17:52:52.309Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "Error-Checking.h",
+              "DocumentMoniker": "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-4\\Error-Checking.h",
+              "RelativeDocumentMoniker": "Homework-4\\Error-Checking.h",
+              "ToolTip": "E:\\Dev\\EE524\\AU26_GPUCompute\\Homework-4\\Error-Checking.h",
+              "RelativeToolTip": "Homework-4\\Error-Checking.h",
+              "ViewState": "AgIAAAkAAAAAAAAAAABBwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2026-11-13T21:26:49.469Z",
               "EditorCaption": ""
             }
           ]
