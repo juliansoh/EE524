@@ -1,12 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LocalDebuggerCommandArguments>-tile32 -input256</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>-tile32 -input256 -T</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <LocalDebuggerCommandArguments>-tile32 -input256</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>-tile32 -input256 -T</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerCommandArgumentsHistory>-tile8 -input256|-tile8 -input256 -T|-tile8 -input4 -T|-tile32 -input256 -T|-tile32 -input256|</LocalDebuggerCommandArgumentsHistory>
+    <LocalDebuggerCommandArgumentsHistory>-tile16 -input256|-tile32 -input256|-tile8 -input256 -T|-tile16 -input256 -T|-tile32 -input256 -T|</LocalDebuggerCommandArgumentsHistory>
   </PropertyGroup>
 </Project>
