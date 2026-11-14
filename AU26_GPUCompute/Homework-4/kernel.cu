@@ -25,6 +25,8 @@
 // ==============================
 
 bool load_mmult_inputs(int width, std::vector<float>& M_h, std::vector<float>& N_h);
+void mmult_cpu(const float* M_h, const float* N_h, float* P_h, int width);
+bool verify_mmult(const float* P_h, const float* P_gpu_h, int width);
 cudaError_t run_mmult(const float* M_h, const float* N_h, float* P_h, int width, int tileWidth, int blockWidth, bool transposeM);
 
 
@@ -197,6 +199,7 @@ int main(int argc, char** argv)
 			printf("specified explicitly, it must match the selected tile size.\n");
 			printf("Input files are read from inputs\\ relative to the working directory.\n");
 			printf("All algorithms print Windows high-resolution full round-trip time in ms.\n");
+			printf("Each GPU result is compared with a sequential CPU reference.\n");
 			printf("For -input4 and -input8, the program prints M, N, and P for verification.\n");
 			printf("\nExamples:\n");
 			printf("  %s -input256 -naive -block8\n", argv[0]);
@@ -280,7 +283,13 @@ int main(int argc, char** argv)
 	if (!load_mmult_inputs(width, M_h, N_h)) {
 		return 1;
 	}
+	// Both results reside in host RAM: P_h holds the sequential CPU reference,
+	// and P_gpu_h receives the selected CUDA kernel's result.
 	std::vector<float> P_h(static_cast<size_t>(width) * width);
+	std::vector<float> P_gpu_h(static_cast<size_t>(width) * width);
+	// Run the CPU-only reference first on the same row-major inputs as the GPU.
+	// This calculation is outside the GPU round-trip timing interval.
+	mmult_cpu(M_h.data(), N_h.data(), P_h.data(), width);
 	printf("Matrix size: %dx%d; ", width, width);
 	if (tileWidth == 0) printf("algorithm: naive (%dx%d block)\n", blockWidth, blockWidth);
 	else printf("algorithm: %s (%dx%d block)\n", transposeM ? "corner-turning (GPU transpose)" : "tiled", blockWidth, blockWidth);
@@ -299,7 +308,7 @@ int main(int argc, char** argv)
 		fprintf(stderr, "[ERROR] QueryPerformanceCounter failed at timer start.\n");
 		return 1;
 	}
-	const cudaError_t cudaStatus = run_mmult(M_h.data(), N_h.data(), P_h.data(), width, tileWidth, blockWidth, transposeM);
+	const cudaError_t cudaStatus = run_mmult(M_h.data(), N_h.data(), P_gpu_h.data(), width, tileWidth, blockWidth, transposeM);
 	if (!QueryPerformanceCounter(&roundTripStop)) {
 		fprintf(stderr, "[ERROR] QueryPerformanceCounter failed at timer stop.\n");
 		return 1;
@@ -312,13 +321,16 @@ int main(int argc, char** argv)
 	const char* algorithm = transposeM ? "MMULTv2b GPU transpose + corner turning" :
 		(tileWidth == 0 ? "MMULTv0 naive" : "MMULTv1 tiled");
 	printf("%s full round-trip time: %.6f ms\n", algorithm, roundTripMs);
-	printf("P[0,0] = %.9g\n", P_h[0]);
+	// Compare every copied-back GPU output against the independent CPU result.
+	// Report a failure and return a nonzero exit status if any element differs.
+	const bool verified = verify_mmult(P_h.data(), P_gpu_h.data(), width);
+	printf("P[0,0] = %.9g\n", P_gpu_h[0]);
 
 	// For verification only: 4x4 and 8x8 matrices are small enough to print;
 	// printing the complete 256x256 matrices is not practical.
 	if (width == 4 || width == 8) {
 		const char* names[] = { "M", "N", "P" };
-		const std::vector<float>* matrices[] = { &M_h, &N_h, &P_h };
+		const std::vector<float>* matrices[] = { &M_h, &N_h, &P_gpu_h };
 		for (int matrix = 0; matrix < 3; ++matrix) {
 			printf("%s:\n", names[matrix]);
 			for (int row = 0; row < width; ++row) {
@@ -334,7 +346,7 @@ int main(int argc, char** argv)
 	if (checkCuda(cudaDeviceReset(), "cudaDeviceReset") != cudaSuccess) {
 		return 1;
 	}
-	return 0;
+	return verified ? 0 : 1;
 }
 
 // ==============================
@@ -379,6 +391,56 @@ bool load_mmult_inputs(int width, std::vector<float>& M_h, std::vector<float>& N
         }
     }
     return true;
+}
+
+// CPU-only reference for square row-major matrices, independent of CUDA kernels.
+// For each output P[row,col], sum M[row,k] * N[k,col] over the inner dimension.
+// The caller supplies distinct host buffers sized for width * width floats.
+void mmult_cpu(const float* M_h, const float* N_h, float* P_h, int width)
+{
+	for (int row = 0; row < width; ++row) {
+		for (int col = 0; col < width; ++col) {
+			float sum = 0.0f;
+			for (int k = 0; k < width; ++k) {
+				sum += M_h[static_cast<size_t>(row) * width + k] *
+					N_h[static_cast<size_t>(k) * width + col];
+			}
+			P_h[static_cast<size_t>(row) * width + col] = sum;
+		}
+	}
+}
+
+// Compare the CPU reference with the GPU result copied back to host memory.
+// Allow FP32 rounding differences using abs(cpu-gpu) <= max(aTol, rTol *
+// max(abs(cpu), abs(gpu))). Non-finite results are always treated as failures.
+bool verify_mmult(const float* P_h, const float* P_gpu_h, int width)
+{
+	constexpr double aTol = 1e-6;
+	constexpr double rTol = 1e-5;
+	size_t mismatches = 0;
+	const size_t count = static_cast<size_t>(width) * width;
+	for (size_t i = 0; i < count; ++i) {
+		const double cpu = P_h[i];
+		const double gpu = P_gpu_h[i];
+		const double absCpu = std::fabs(cpu);
+		const double absGpu = std::fabs(gpu);
+		const double scaledTol = rTol * (absCpu > absGpu ? absCpu : absGpu);
+		const double tolerance = aTol > scaledTol ? aTol : scaledTol;
+		if (!std::isfinite(cpu) || !std::isfinite(gpu) || std::fabs(cpu - gpu) > tolerance) {
+			// Print the first mismatch to identify the problem without flooding output.
+			if (mismatches == 0) {
+				fprintf(stderr, "[ERROR] First verification mismatch at P[%zu,%zu]: CPU=%.9g GPU=%.9g\n",
+					i / static_cast<size_t>(width), i % static_cast<size_t>(width), cpu, gpu);
+			}
+			++mismatches;
+		}
+	}
+	if (mismatches != 0) {
+		fprintf(stderr, "Verification FAILED: %zu of %zu elements differ or are non-finite.\n", mismatches, count);
+		return false;
+	}
+	printf("Verification PASSED: all %zu GPU elements match the CPU reference (aTol=1e-6, rTol=1e-5).\n", count);
+	return true;
 }
 
 // ==============================
