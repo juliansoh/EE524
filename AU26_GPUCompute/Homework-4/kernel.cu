@@ -89,6 +89,32 @@ __global__ void mmult_tiled_Kernel(const float* M, const float* N, float* P, int
 
 int main(int argc, char** argv)
 {
+	for (int i = 1; i < argc; ++i) {
+		if (strcmp(argv[i], "-h") == 0) {
+			printf("Usage: %s [-input4|-input8|-input256] [-naive|-tile8|-tile16|-tile32] [-block8|-block16|-block32]\n", argv[0]);
+			printf("\nOptions (choose at most one from each group; order does not matter):\n");
+			printf("  -input4      Load 4x4 M and N matrices.\n");
+			printf("  -input8      Load 8x8 M and N matrices.\n");
+			printf("  -input256    Load 256x256 M and N matrices (default).\n");
+			printf("  -naive       Run global-memory matrix multiplication (default).\n");
+			printf("  -tile8       Run shared-memory multiplication with 8x8 tiles.\n");
+			printf("  -tile16      Run shared-memory multiplication with 16x16 tiles.\n");
+			printf("  -tile32      Run shared-memory multiplication with 32x32 tiles.\n");
+			printf("  -block8      Use an 8x8 thread block.\n");
+			printf("  -block16     Use a 16x16 thread block (default for naive).\n");
+			printf("  -block32     Use a 32x32 thread block.\n");
+			printf("  -h           Show this help and exit without running a kernel.\n");
+			printf("\nTiled kernels default to a block matching the tile size; if a block is\n");
+			printf("specified explicitly, it must match the selected tile size.\n");
+			printf("Input files are read from inputs\\ relative to the working directory.\n");
+			printf("For -input4 and -input8, the program prints M, N, and P for verification.\n");
+			printf("\nExamples:\n");
+			printf("  %s -input256 -naive -block8\n", argv[0]);
+			printf("  %s -input8 -tile16 -block16\n", argv[0]);
+			return 0;
+		}
+	}
+
 	int width = 256;
 	int tileWidth = 0; // Zero selects the naive global-memory kernel.
 	int blockWidth = 16;
@@ -96,15 +122,15 @@ int main(int argc, char** argv)
 	bool algorithmSelected = false;
 	bool blockSelected = false;
 	for (int i = 1; i < argc; ++i) {
-		if (strcmp(argv[i], "-size4") == 0 || strcmp(argv[i], "-size8") == 0 ||
-			strcmp(argv[i], "-size256") == 0) {
+		if (strcmp(argv[i], "-input4") == 0 || strcmp(argv[i], "-input8") == 0 ||
+			strcmp(argv[i], "-input256") == 0) {
 			if (sizeSelected) {
 				fprintf(stderr, "[ERROR] Specify only one matrix size.\n");
 				return 1;
 			}
 			sizeSelected = true;
-			width = strcmp(argv[i], "-size4") == 0 ? 4 :
-				(strcmp(argv[i], "-size8") == 0 ? 8 : 256);
+			width = strcmp(argv[i], "-input4") == 0 ? 4 :
+				(strcmp(argv[i], "-input8") == 0 ? 8 : 256);
 		}
 		else if (strcmp(argv[i], "-naive") == 0 || strcmp(argv[i], "-tile8") == 0 ||
 			strcmp(argv[i], "-tile16") == 0 || strcmp(argv[i], "-tile32") == 0) {
@@ -129,7 +155,7 @@ int main(int argc, char** argv)
 		}
 		else {
 			fprintf(stderr, "[ERROR] Unknown option: %s\n", argv[i]);
-			fprintf(stderr, "Usage: %s [-size4|-size8|-size256] [-naive|-tile8|-tile16|-tile32] [-block8|-block16|-block32]\n", argv[0]);
+			fprintf(stderr, "Usage: %s [-input4|-input8|-input256] [-naive|-tile8|-tile16|-tile32] [-block8|-block16|-block32]\n", argv[0]);
 			return 1;
 		}
 	}

@@ -83,7 +83,7 @@
     <ClInclude Include="Error-Checking.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Homework4-naive-256.ncu-repz" />
+    <None Include="Homework4-naive-block16-256.ncu-repz" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
