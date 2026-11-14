@@ -12,3 +12,8 @@ Thumbs.db
 # Logs
 *.log
 npm-debug.log*
+
+# Visual Studio IntelliSense caches
+*.ipch
+ipch/
+.vs/
